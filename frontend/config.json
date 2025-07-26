@@ -7,37 +7,37 @@
   "services": {
     "lcd_display": {
       "name": "LCD Display",
-      "url": "http://localhost:8089",
+      "url": "http://${HOST_DOMAIN}:${LCD_DISPLAY_PORT}",
       "icon": "fas fa-desktop",
       "description": "7.9\" HDMI Display Simulator"
     },
     "hui_keyboard": {
       "name": "HUI Keyboard Panel",
-      "url": "http://localhost:8087",
+      "url": "http://${HOST_DOMAIN}:${HUI_KEYBOARD_PORT}",
       "icon": "fas fa-keyboard",
       "description": "Interactive Keyboard Interface"
     },
     "modbus_visualizer": {
       "name": "Modbus I/O Visualizer",
-      "url": "http://localhost:8084",
+      "url": "http://${HOST_DOMAIN}:${MODBUS_VISUALIZER_PORT}",
       "icon": "fas fa-network-wired",
       "description": "Real-time Modbus Data Visualization"
     },
     "modbus_io_api": {
       "name": "Modbus IO API",
-      "url": "http://localhost:8085",
+      "url": "http://${HOST_DOMAIN}:${MODBUS_IO_API_PORT}",
       "icon": "fas fa-api",
       "description": "Modbus RTU IO 8CH API"
     },
     "rpi_api": {
       "name": "RPi Emulator API",
-      "url": "http://localhost:4000",
+      "url": "http://${HOST_DOMAIN}:${RPI_API_PORT}",
       "icon": "fas fa-microchip",
       "description": "Raspberry Pi Hardware Emulator"
     }
   },
   "mqtt": {
-    "broker_url": "ws://localhost:9001",
+    "broker_url": "ws://${WS_HOST}:${MQTT_WEBSOCKET_PORT}",
     "broker_port": 1883,
     "topics": {
       "sensors": "c20/sensors",

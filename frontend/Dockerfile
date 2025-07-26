@@ -10,8 +10,8 @@ COPY .env /usr/share/nginx/html/
 COPY config.json /usr/share/nginx/html/
 COPY js/ /usr/share/nginx/html/js/
 
-# Copy nginx configuration
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Copy nginx template
+COPY nginx.conf.template /etc/nginx/templates/default.conf.template
 
 EXPOSE 80
 

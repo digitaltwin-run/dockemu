@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HMI Virtual Monitor</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>HMI Virtual Monitor</h1>
+            <div class="status">
+                <span id="status">Disconnected</span>
+                <div class="led" id="status-led"></div>
+            </div>
+        </header>
+
+        <div class="monitor-container">
+            <div class="display-wrapper">
+                <div class="monitor-bezel">
+                    <div class="screen-area">
+                        <canvas id="display-canvas" width="1920" height="1080"></canvas>
+                        <div class="overlay-controls" id="overlay-controls">
+                            <div class="control-button" id="power-btn" title="Power">⏻</div>
+                            <div class="control-button" id="menu-btn" title="Menu">☰</div>
+                            <div class="control-button" id="source-btn" title="Input Source">📺</div>
+                        </div>
+                    </div>
+                    
+                    <div class="monitor-info">
+                        <div class="brand">HMI Display</div>
+                        <div class="model">HD-7.9-HDMI</div>
+                        <div class="power-led" id="power-led"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="display-controls">
+                <div class="resolution-controls">
+                    <label for="resolution-select">Resolution:</label>
+                    <select id="resolution-select">
+                        <option value="1920x1080">1920x1080 (Full HD)</option>
+                        <option value="1680x1050">1680x1050 (WSXGA+)</option>
+                        <option value="1440x900">1440x900 (WXGA+)</option>
+                        <option value="1366x768">1366x768 (HD)</option>
+                        <option value="1280x720">1280x720 (HD 720p)</option>
+                        <option value="1024x768">1024x768 (XGA)</option>
+                        <option value="800x600">800x600 (SVGA)</option>
+                    </select>
+                </div>
+
+                <div class="refresh-controls">
+                    <label for="refresh-rate">Refresh Rate:</label>
+                    <select id="refresh-rate">
+                        <option value="60">60 Hz</option>
+                        <option value="75">75 Hz</option>
+                        <option value="120">120 Hz</option>
+                        <option value="144">144 Hz</option>
+                    </select>
+                </div>
+
+                <div class="input-source">
+                    <label for="input-source">Input Source:</label>
+                    <select id="input-source">
+                        <option value="hdmi1">HDMI 1 (RPi)</option>
+                        <option value="hdmi2">HDMI 2</option>
+                        <option value="vga">VGA</option>
+                        <option value="dvi">DVI</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="monitor-settings">
+            <div class="settings-panel">
+                <h3>Display Settings</h3>
+                
+                <div class="setting-group">
+                    <div class="setting">
+                        <label for="brightness">Brightness:</label>
+                        <input type="range" id="brightness" min="0" max="100" value="80">
+                        <span id="brightness-value">80%</span>
+                    </div>
+                    
+                    <div class="setting">
+                        <label for="contrast">Contrast:</label>
+                        <input type="range" id="contrast" min="0" max="100" value="75">
+                        <span id="contrast-value">75%</span>
+                    </div>
+                    
+                    <div class="setting">
+                        <label for="saturation">Saturation:</label>
+                        <input type="range" id="saturation" min="0" max="100" value="50">
+                        <span id="saturation-value">50%</span>
+                    </div>
+                    
+                    <div class="setting">
+                        <label for="hue">Hue:</label>
+                        <input type="range" id="hue" min="-180" max="180" value="0">
+                        <span id="hue-value">0°</span>
+                    </div>
+                </div>
+
+                <div class="setting-group">
+                    <div class="setting">
+                        <label for="color-temp">Color Temperature:</label>
+                        <select id="color-temp">
+                            <option value="6500">6500K (Cool)</option>
+                            <option value="5500" selected>5500K (Normal)</option>
+                            <option value="4500">4500K (Warm)</option>
+                            <option value="3200">3200K (Very Warm)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="setting">
+                        <label for="aspect-ratio">Aspect Ratio:</label>
+                        <select id="aspect-ratio">
+                            <option value="16:9" selected>16:9</option>
+                            <option value="16:10">16:10</option>
+                            <option value="4:3">4:3</option>
+                            <option value="21:9">21:9</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="setting-group">
+                    <div class="setting">
+                        <label for="scaling">Scaling:</label>
+                        <select id="scaling">
+                            <option value="none">None</option>
+                            <option value="fit" selected>Fit to Screen</option>
+                            <option value="fill">Fill Screen</option>
+                            <option value="stretch">Stretch</option>
+                        </select>
+                    </div>
+                    
+                    <div class="setting">
+                        <label for="rotation">Rotation:</label>
+                        <select id="rotation">
+                            <option value="0" selected>0° (Normal)</option>
+                            <option value="90">90° (Portrait)</option>
+                            <option value="180">180° (Inverted)</option>
+                            <option value="270">270° (Portrait Flipped)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stream-panel">
+                <h3>Stream Settings</h3>
+                
+                <div class="setting-group">
+                    <div class="setting">
+                        <label for="stream-quality">Stream Quality:</label>
+                        <select id="stream-quality">
+                            <option value="low">Low (480p)</option>
+                            <option value="medium" selected>Medium (720p)</option>
+                            <option value="high">High (1080p)</option>
+                            <option value="ultra">Ultra (4K)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="setting">
+                        <label for="frame-rate">Frame Rate:</label>
+                        <select id="frame-rate">
+                            <option value="15">15 FPS</option>
+                            <option value="30" selected>30 FPS</option>
+                            <option value="60">60 FPS</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="stream-controls">
+                    <button id="start-capture" class="control-btn">Start Capture</button>
+                    <button id="stop-capture" class="control-btn">Stop Capture</button>
+                    <button id="take-screenshot" class="control-btn">Screenshot</button>
+                    <button id="fullscreen" class="control-btn">Fullscreen</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="connection-info">
+            <div class="info-panel">
+                <h3>Connection Info</h3>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="label">RPi Connection:</span>
+                        <span id="rpi-connection" class="value">Disconnected</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">VNC Stream:</span>
+                        <span id="vnc-stream" class="value">Inactive</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Current Resolution:</span>
+                        <span id="current-resolution" class="value">1920x1080</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Refresh Rate:</span>
+                        <span id="current-refresh" class="value">60 Hz</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Input Source:</span>
+                        <span id="current-input" class="value">HDMI 1</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Signal:</span>
+                        <span id="signal-status" class="value">No Signal</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="statistics-panel">
+                <h3>Statistics</h3>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <span class="stat-label">Frames Received:</span>
+                        <span id="frames-received" class="stat-value">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Frame Rate:</span>
+                        <span id="actual-fps" class="stat-value">0 FPS</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Latency:</span>
+                        <span id="latency" class="stat-value">0 ms</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Data Rate:</span>
+                        <span id="data-rate" class="stat-value">0 KB/s</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="event-log-panel">
+            <h3>Monitor Events</h3>
+            <div id="event-log"></div>
+            <button id="clear-log" class="control-btn">Clear Log</button>
+        </div>
+    </div>
+
+    <script src="hmi-monitor.js"></script>
+</body>
+</html>

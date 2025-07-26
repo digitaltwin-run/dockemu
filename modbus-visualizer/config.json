@@ -5,7 +5,7 @@
     "title": "Modbus RTU IO 8CH - Real-time Monitor"
   },
   "api": {
-    "modbus_url": "http://localhost:8020/api",
+    "modbus_url": "http://localhost:8085/api",
     "timeout": 5000,
     "retry_attempts": 3,
     "retry_delay": 1000

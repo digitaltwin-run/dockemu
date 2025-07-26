@@ -25,12 +25,13 @@ services:
     build: ./rpi-emulator
     container_name: c20-rpi3pc
     ports:
-      - "4000:4000"  # API port
+      - "${RPI_API_PORT}:4000"  # API port
     volumes:
       - ./shared:/shared
       - i2c-bus:/dev/i2c
     networks:
       - c20-network
+    privileged: true
     environment:
       - MQTT_BROKER=mosquitto
       - SYSTEM_MODE=C20
@@ -40,16 +41,40 @@ services:
     depends_on:
       - mosquitto
 
+  # QEMU-based Raspberry PI OS Virtualization
+  rpi-qemu:
+    build:
+      context: ./rpi-emulator
+      dockerfile: Dockerfile.qemu
+    container_name: c20-rpi-qemu
+    ports:
+      - "${QEMU_SSH_PORT}:2222"   # SSH to RPi OS
+      - "${QEMU_VNC_PORT}:5901"   # VNC display
+      - "${QEMU_API_PORT}:4000"   # API bridge
+      - "${QEMU_WEB_PORT}:8080"   # Management interface
+    volumes:
+      - ./rpi3iso:/rpi/images
+      - ./shared:/rpi/shared
+    networks:
+      - c20-network
+    privileged: true
+    environment:
+      - QEMU_CPU=cortex-a72
+      - QEMU_MACHINE=raspi3b
+      - QEMU_MEMORY=1G
+    depends_on:
+      - mosquitto
+
   # LCD Display (7.9" HDMI)
   lcd-display:
     build: ./lcd-display
     container_name: c20-lcd
     ports:
-      - "8089:80"
+      - "${LCD_DISPLAY_PORT}:80"
     networks:
       - c20-network
     environment:
-      - WS_URL=ws://rpi3pc:9001
+      - WS_URL=ws://${WS_HOST}:${MQTT_WEBSOCKET_PORT}
     depends_on:
       - rpi3pc
 
@@ -58,7 +83,7 @@ services:
     build: ./hui-keyboard
     container_name: c20-keyboard
     ports:
-      - "8087:80"
+      - "${HUI_KEYBOARD_PORT}:80"
     networks:
       - c20-network
     environment:
@@ -98,23 +123,26 @@ services:
     image: eclipse-mosquitto:2.0
     container_name: c20-mqtt
     ports:
-      - "1883:1883"
-      - "9001:9001"
+      - "${MQTT_PORT}:1883"
+      - "${MQTT_WEBSOCKET_PORT}:9001"
     volumes:
       - ./mosquitto/config:/mosquitto/config
     networks:
       - c20-network
 
-  # WebGUI na porcie 8088
-  webgui:
+  # Frontend na porcie 8088
+  frontend:
     build: ./frontend
-    container_name: c20-webgui
+    container_name: c20-frontend
     ports:
-      - "8088:80"
+      - "${FRONTEND_PORT}:80"
     networks:
       - c20-network
     environment:
-      - API_URL=http://localhost:4000
+      - API_URL=http://${API_HOST}:${RPI_API_PORT}
+      - LCD_DISPLAY_PORT=${LCD_DISPLAY_PORT}
+      - HUI_KEYBOARD_PORT=${HUI_KEYBOARD_PORT}
+      - MODBUS_VISUALIZER_PORT=${MODBUS_VISUALIZER_PORT}
     depends_on:
       - rpi3pc
 
@@ -124,8 +152,8 @@ services:
     build: ./modbus-io-8ch
     container_name: c20-modbus-io
     ports:
-      - "5020:5020"  # TCP bridge dla Modbus RTU
-      - "8085:8085"  # Web API
+      - "${MODBUS_IO_TCP_PORT}:5020"  # TCP bridge dla Modbus RTU
+      - "${MODBUS_IO_API_PORT}:8083"  # Web API (external:internal)
     volumes:
       - modbus-rtu:/dev/modbus
     networks:
@@ -140,11 +168,11 @@ services:
     build: ./modbus-visualizer
     container_name: c20-modbus-viz
     ports:
-      - "8084:80"
+      - "${MODBUS_VISUALIZER_PORT}:80"
     networks:
       - c20-network
     environment:
-      - MODBUS_API=http://localhost:8085
+      - MODBUS_API=http://${API_HOST}:${MODBUS_IO_API_PORT}
     depends_on:
       - modbus-io-8ch
 

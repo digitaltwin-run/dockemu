@@ -44,8 +44,9 @@ server {
     }
 
     # Proxy configuration for iframe content to avoid CORS issues
+    # Use HOST_DOMAIN:port instead of Docker service names
     location /proxy/lcd/ {
-        proxy_pass http://lcd-display/;
+        proxy_pass http://${HOST_DOMAIN}:${LCD_DISPLAY_PORT}/;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -53,7 +54,7 @@ server {
     }
 
     location /proxy/keyboard/ {
-        proxy_pass http://hui-keyboard/;
+        proxy_pass http://${HOST_DOMAIN}:${HUI_KEYBOARD_PORT}/;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -61,7 +62,7 @@ server {
     }
 
     location /proxy/modbus/ {
-        proxy_pass http://modbus-visualizer/;
+        proxy_pass http://${HOST_DOMAIN}:${MODBUS_VISUALIZER_PORT}/;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
