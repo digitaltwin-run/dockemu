@@ -1,11 +1,12 @@
-# C20 Hardware Simulator - Docker Environment
+# Digital Twin Emulator - C20 Simulator
 
-🚀 **Complete Docker-based simulation environment for C20 hardware components with unified dashboard control**
+Kompletny emulator systemu C20 z wieloma mikroserwisami w Docker. System oferuje dwa tryby pracy:
+- **PC Mode**: Pełna emulacja z mock GPIO/I2C dla rozwoju na komputerze
+- **Hardware Mode**: Bezpośrednie sterowanie sprzętem dla uruchomienia na RPi3
 
-## 📋 Table of Contents
+## Architektura Systemu
 
-- [Quick Start](#-quick-start)
-- [Project Overview](#-project-overview)
+System składa się z następujących mikroserwisów:
 - [Installation](#-installation)
 - [Using the Simulations](#-using-the-simulations)
 - [Available Services](#-available-services)
@@ -30,13 +31,34 @@ Then open **http://localhost:8088** for the unified dashboard! 🎉
 
 This project provides a complete Docker-based simulation environment for C20 hardware components, including:
 
-- **LCD Display (7.9" HDMI)** - System interface simulation
-- **HUI Keyboard Panel** - Interactive control interface  
-- **Pressure Sensors** - LP/MP/HP sensor simulation with I2C
-- **Valve Controller** - 12-channel PCB output control
-- **Modbus I/O** - 8-channel RTU simulation with web visualization
-- **Test Procedures** - Automated BLS mask testing
-- **Unified Dashboard** - Control all services from one interface
+### Serwisy Główne
+- **rpi3pc** - Emulator RPi5 dla PC (port 4000) - tryb emulacji
+- **rpi** - Serwis dla prawdziwego sprzętu RPi3 (tylko hardware mode)
+- **mosquitto** - MQTT Broker (porty 1883, 9001)
+
+### Interfejsy Użytkownika
+- **webgui** - Główny interfejs web (port 8088)
+- **lcd-display** - Symulator wyświetlacza LCD 7.9" (port 8089)
+- **hui-keyboard** - Panel klawiatury HUI (port 8087)
+
+### Systemy I/O
+- **modbus-io-8ch** - Symulator Modbus RTU IO 8CH (porty 5020, 8085)
+- **modbus-visualizer** - Wizualizacja danych Modbus (port 8084)
+- **pressure-sensors** - Symulacja czujników ciśnienia
+- **valve-controller** - Sterownik zaworów PCB OUT 12
+
+## Dostępne Porty
+
+| Serwis | Port | Opis | URL |
+|--------|------|------|-----|
+| WebGUI | 8088 | Główny interfejs | http://localhost:8088 |
+| LCD Display | 8089 | Symulator LCD | http://localhost:8089 |
+| HUI Keyboard | 8087 | Panel klawiatury | http://localhost:8087 |
+| Modbus Visualizer | 8084 | Wizualizacja Modbus | http://localhost:8084 |
+| Modbus IO API | 8085 | API Modbus RTU | http://localhost:8085 |
+| RPi3PC API | 4000 | API emulatora | http://localhost:4000 |
+| MQTT Broker | 1883 | MQTT protokół | mqtt://localhost:1883 |
+| MQTT WebSocket | 9001 | WebSocket MQTT | ws://localhost:9001 |
 
 ## 🛠️ Installation
 
@@ -99,7 +121,7 @@ The unified dashboard provides complete control over all simulators:
 ### Individual Service Access
 
 #### 🖥️ LCD Display Simulator
-**Access:** http://localhost:8081
+**Access:** http://localhost:8091
 
 Simulates the 7.9" HDMI display showing:
 - System status information
@@ -108,7 +130,7 @@ Simulates the 7.9" HDMI display showing:
 - Alarm states
 
 #### ⌨️ HUI Keyboard Panel  
-**Access:** http://localhost:8082
+**Access:** http://localhost:8092
 
 Interactive keyboard interface for:
 - Navigation through menus
@@ -206,8 +228,8 @@ gpio.set_pin(1, False)
 | Service | Port | Description | Health Check |
 |---------|------|-------------|--------------|
 | **Unified Dashboard** | 8088 | Main control interface | http://localhost:8088/health |
-| **LCD Display** | 8081 | System display simulation | http://localhost:8081 |
-| **HUI Keyboard** | 8082 | Interactive keyboard | http://localhost:8082 |
+| **LCD Display** | 8091 | System display simulation | http://localhost:8091 |
+| **HUI Keyboard** | 8092 | Interactive keyboard | http://localhost:8092 |
 | **Modbus Visual** | 8084 | I/O visualization | http://localhost:8084 |
 | **MQTT Broker** | 1883 | Message communication | - |
 | **WebSocket** | 9001 | Real-time communication | - |
@@ -254,7 +276,7 @@ make dev            # Start in development mode
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
 │  Unified        │    │  LCD Display    │    │  HUI Keyboard   │
 │  Dashboard      │    │  (nginx)        │    │  (Flask)        │
-│  :8088          │    │  :8081          │    │  :8082          │
+│  :8088          │    │  :8091          │    │  :8092          │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
          │                       │                       │
          └───────────────────────┼───────────────────────┘
@@ -329,14 +351,14 @@ make up
 ### Service-Specific Issues
 
 #### LCD Display Not Loading
-- Check if port 8081 is available
+- Check if port 8091 is available
 - Verify nginx container is running: `docker ps | grep lcd`
 - Check logs: `make logs-service SERVICE=lcd-display`
 
 #### Keyboard Not Responding  
-- Verify Flask server is running on port 8082
+- Verify Flask server is running on port 8092
 - Check I2C communication: `make shell SERVICE=rpi`
-- Test keyboard service: `curl http://localhost:8082/health`
+- Test keyboard service: `curl http://localhost:8092/health`
 
 #### Modbus Communication Issues
 - Verify Modbus simulator is listening on port 8084

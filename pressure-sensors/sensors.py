@@ -81,7 +81,7 @@ class PressureSensorSimulator:
             return b'\x01' if address in self.sensors else b'\x00'
         elif register == 0x02:  # Kalibracja
             # Symulacja kalibracji
-            return b'\xOK'
+            return b'OK'
         else:
             return b'\xFF\xFF'
 

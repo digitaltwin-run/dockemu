@@ -7,6 +7,11 @@ COPY index.html .
 COPY style.css .
 COPY app.js .
 
+# Copy configuration files
+COPY .env .
+COPY config.json .
+COPY js/ ./js/
+
 # Configure nginx
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 

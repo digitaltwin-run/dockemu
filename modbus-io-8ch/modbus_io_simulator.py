@@ -415,4 +415,4 @@ if __name__ == '__main__':
     bridge_thread.start()
     
     # Uruchom Flask API
-    app.run(host='0.0.0.0', port=8083)
+    app.run(host='0.0.0.0', port=8020)

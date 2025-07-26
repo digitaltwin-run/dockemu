@@ -137,14 +137,15 @@
                                 <button class="frame-btn" title="Fullscreen" onclick="toggleFrameFullscreen('lcd-frame')">
                                     <i class="fas fa-expand"></i>
                                 </button>
-                                <button class="frame-btn" title="New Window" onclick="openInNewWindow('http://localhost:8081')">
+                                <button class="frame-btn" title="New Window" onclick="openInNewWindow('#lcd-display-url')" data-service="lcd_display">
                                     <i class="fas fa-external-link-alt"></i>
                                 </button>
                             </div>
                         </div>
                         <iframe 
-                            id="lcd-frame" 
-                            src="http://localhost:8081" 
+                            id="lcd-display-frame" 
+                            src="#lcd-display-url" 
+                            data-service="lcd_display"
                             frameborder="0"
                             loading="lazy">
                         </iframe>
@@ -160,14 +161,15 @@
                                 <button class="frame-btn" title="Fullscreen" onclick="toggleFrameFullscreen('keyboard-frame')">
                                     <i class="fas fa-expand"></i>
                                 </button>
-                                <button class="frame-btn" title="New Window" onclick="openInNewWindow('http://localhost:8082')">
+                                <button class="frame-btn" title="New Window" onclick="openInNewWindow('#hui-keyboard-url')" data-service="hui_keyboard">
                                     <i class="fas fa-external-link-alt"></i>
                                 </button>
                             </div>
                         </div>
                         <iframe 
-                            id="keyboard-frame" 
-                            src="http://localhost:8082" 
+                            id="hui-keyboard-frame" 
+                            src="#hui-keyboard-url" 
+                            data-service="hui_keyboard"
                             frameborder="0"
                             loading="lazy">
                         </iframe>
@@ -183,14 +185,15 @@
                                 <button class="frame-btn" title="Fullscreen" onclick="toggleFrameFullscreen('modbus-frame')">
                                     <i class="fas fa-expand"></i>
                                 </button>
-                                <button class="frame-btn" title="New Window" onclick="openInNewWindow('http://localhost:8084')">
+                                <button class="frame-btn" title="New Window" onclick="openInNewWindow('#modbus-visualizer-url')" data-service="modbus_visualizer">
                                     <i class="fas fa-external-link-alt"></i>
                                 </button>
                             </div>
                         </div>
                         <iframe 
-                            id="modbus-frame" 
-                            src="http://localhost:8084" 
+                            id="modbus-visualizer-frame" 
+                            src="#modbus-visualizer-url" 
+                            data-service="modbus_visualizer" 
                             frameborder="0"
                             loading="lazy">
                         </iframe>
@@ -268,6 +271,8 @@
         </div>
     </div>
 
+    <!-- Configuration Management -->
+    <script src="js/config.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

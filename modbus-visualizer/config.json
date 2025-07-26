@@ -1,0 +1,41 @@
+{
+  "app": {
+    "name": "Modbus RTU IO 8CH Monitor",
+    "version": "1.0",
+    "title": "Modbus RTU IO 8CH - Real-time Monitor"
+  },
+  "api": {
+    "modbus_url": "http://localhost:8020/api",
+    "timeout": 5000,
+    "retry_attempts": 3,
+    "retry_delay": 1000
+  },
+  "ui": {
+    "update_interval": 1000,
+    "history_length": 100,
+    "enable_debug": false,
+    "theme": "dark",
+    "auto_refresh": true
+  },
+  "modbus": {
+    "default_config": {
+      "baudrate": 9600,
+      "parity": "N",
+      "stopbits": 1,
+      "databits": 8,
+      "device": "/dev/ttyUSB0"
+    },
+    "channels": {
+      "digital_inputs": 8,
+      "digital_outputs": 8,
+      "analog_inputs": 4,
+      "analog_outputs": 4
+    },
+    "address_mapping": {
+      "digital_inputs_base": "0x0000",
+      "digital_outputs_base": "0x1000",
+      "analog_inputs_base": "0x2000",
+      "analog_outputs_base": "0x3000"
+    }
+  }
+}

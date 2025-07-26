@@ -53,8 +53,8 @@ docker-compose up --build
 ```
 
 3. **Dostęp do interfejsów:**
-- LCD Display: http://localhost:8081
-- HUI Keyboard: http://localhost:8082
+- LCD Display: http://localhost:8091
+- HUI Keyboard: http://localhost:8092
 - WebGUI: http://localhost:8088
 - MQTT Broker: localhost:1883
 

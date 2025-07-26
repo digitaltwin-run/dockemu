@@ -15,4 +15,7 @@ RUN pip install -r requirements.txt
 
 COPY . .
 
-CMD ["python", "boot.sh"]
+# Make boot.sh executable
+RUN chmod +x boot.sh
+
+CMD ["./boot.sh"]

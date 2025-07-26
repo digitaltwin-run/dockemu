@@ -1,5 +1,6 @@
 import asyncio
 from enum import Enum
+from typing import Callable
 
 
 class GPIOMode(Enum):

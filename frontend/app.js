@@ -2,8 +2,8 @@
 class DashboardController {
     constructor() {
         this.services = {
-            lcd: { url: 'http://localhost:8081', active: true, name: 'LCD Display' },
-            keyboard: { url: 'http://localhost:8082', active: true, name: 'HUI Keyboard' },
+            lcd: { url: 'http://localhost:8091', active: true, name: 'LCD Display' },
+            keyboard: { url: 'http://localhost:8092', active: true, name: 'HUI Keyboard' },
             modbus: { url: 'http://localhost:8084', active: true, name: 'Modbus I/O' }
         };
         this.currentLayout = 'grid';

@@ -269,9 +269,22 @@
         </div>
     </div>
     
+    <!-- Configuration Management -->
+    <script src="js/config.js"></script>
     <script>
-        const API_URL = 'http://localhost:8083/api';
+        // API URL will be loaded from configuration
+        let API_URL = 'http://localhost:8020/api'; // fallback
         let currentStatus = null;
+        
+        // Update API_URL when config is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.modbusConfig) {
+                window.modbusConfig.init().then(() => {
+                    API_URL = window.modbusConfig.getAPIUrl();
+                    console.log('API URL updated from configuration:', API_URL);
+                });
+            }
+        });
         
         // Inicjalizacja
         function init() {

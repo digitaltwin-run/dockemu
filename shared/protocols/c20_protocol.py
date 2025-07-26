@@ -297,9 +297,9 @@ class ProtocolConstants:
     PORTS = {
         "MQTT": 1883,
         "WEBSOCKET": 9001,
-        "LCD_DISPLAY": 8081,
-        "HUI_KEYBOARD": 8082,
-        "MODBUS_API": 8083,
+        "LCD_DISPLAY": 8091,
+        "HUI_KEYBOARD": 8092,
+        "MODBUS_API": 8020,
         "MODBUS_VIZ": 8084,
         "MAIN_GUI": 8088
     }

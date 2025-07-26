@@ -29,7 +29,7 @@ RUN mkdir -p /var/log/modbus-io-8ch /var/run/modbus-io-8ch \
 RUN chmod +x /app/init.sh
 
 # Expose ports
-EXPOSE 5020 8083
+EXPOSE 5020 8020
 
 # Run the application
 CMD ["./init.sh"]

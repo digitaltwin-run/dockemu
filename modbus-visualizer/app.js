@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Configuration
     const config = {
-        apiUrl: 'http://modbus-io-8ch:8083',
+        apiUrl: 'http://localhost:8020',
         updateInterval: 1000, // 1 second
         registerCounts: {
             coils: 8,
