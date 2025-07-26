@@ -140,6 +140,7 @@ services:
       - c20-network
     environment:
       - API_URL=http://${API_HOST}:${RPI_API_PORT}
+      - HOST_DOMAIN=${HOST_DOMAIN}
       - LCD_DISPLAY_PORT=${LCD_DISPLAY_PORT}
       - HUI_KEYBOARD_PORT=${HUI_KEYBOARD_PORT}
       - MODBUS_VISUALIZER_PORT=${MODBUS_VISUALIZER_PORT}

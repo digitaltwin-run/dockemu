@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # HMI Monitor Service Startup Script
 

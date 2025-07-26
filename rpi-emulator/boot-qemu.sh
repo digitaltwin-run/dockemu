@@ -23,7 +23,7 @@ find_rpi_image() {
     for img in "$RPI_IMAGE_DIR"/*.img; do
         if [ -f "$img" ]; then
             image_file="$img"
-            echo "Found Raspberry Pi image: $(basename "$img")"
+            echo "Found Raspberry Pi image: $(basename "$img")" >&2
             break
         fi
     done
@@ -33,15 +33,15 @@ find_rpi_image() {
         for iso in "$RPI_IMAGE_DIR"/*.iso; do
             if [ -f "$iso" ]; then
                 image_file="$iso"
-                echo "Found Raspberry Pi ISO: $(basename "$iso")"
+                echo "Found Raspberry Pi ISO: $(basename "$iso")" >&2
                 break
             fi
         done
     fi
     
     if [ -z "$image_file" ]; then
-        echo "ERROR: No Raspberry Pi image found in $RPI_IMAGE_DIR"
-        echo "Please place a .img or .iso file in the images directory"
+        echo "ERROR: No Raspberry Pi image found in $RPI_IMAGE_DIR" >&2
+        echo "Please place a .img or .iso file in the images directory" >&2
         exit 1
     fi
     
@@ -53,19 +53,19 @@ prepare_image() {
     local source_image="$1"
     local work_image="/rpi/raspios-working.img"
     
-    echo "Preparing working image from: $(basename "$source_image")"
+    echo "Preparing working image from: $(basename "$source_image")" >&2
     
     # Copy image if it doesn't exist or source is newer
     if [ ! -f "$work_image" ] || [ "$source_image" -nt "$work_image" ]; then
-        echo "Creating working copy of image..."
+        echo "Creating working copy of image..." >&2
         cp "$source_image" "$work_image"
         
         # Extend image to 8GB for more space
-        echo "Extending image to 8GB..."
-        qemu-img resize "$work_image" 8G
+        echo "Extending image to 8GB..." >&2
+        qemu-img resize "$work_image" 8G >&2
         
         # Enable SSH by creating ssh file in boot partition
-        echo "Enabling SSH..."
+        echo "Enabling SSH..." >&2
         mkdir -p /tmp/rpi-boot
         
         # Mount boot partition (assuming it's the first partition)
@@ -79,7 +79,7 @@ prepare_image() {
             losetup -d "$LOOP_DEVICE" 2>/dev/null || true
         fi
         
-        rmdir /tmp/rpi-boot 2>/dev/null || true
+        rm -rf /tmp/rpi-boot
     fi
     
     echo "$work_image"
@@ -109,7 +109,7 @@ start_qemu() {
         -m "$QEMU_MEMORY" \
         -smp 4 \
         -drive "file=$image_file,format=raw,if=sd" \
-        -netdev user,id=net0,hostfwd=tcp::${SSH_PORT}-:22,hostfwd=tcp::${API_PORT}-:80 \
+        -netdev user,id=net0,hostfwd=tcp::${SSH_PORT}-:22 \
         -device rtl8139,netdev=net0 \
         -vnc ":1" \
         -serial stdio \
