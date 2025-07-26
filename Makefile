@@ -21,7 +21,7 @@ up: build ## Build and start all services
 	@echo ""
 	@echo "✅ Services are starting up!"
 	@echo "📱 Access points:"
-	@echo "   • Main Dashboard: http://localhost:8080"
+	@echo "   • Main Dashboard: http://localhost:8088"
 	@echo "   • LCD Display:    http://localhost:8081"
 	@echo "   • HUI Keyboard:   http://localhost:8082"
 	@echo "   • Modbus Visual:  http://localhost:8084"

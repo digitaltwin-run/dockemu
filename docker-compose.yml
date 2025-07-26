@@ -1,20 +1,42 @@
 version: '3.8'
 
 services:
-  # Główny emulator RPi5
+  # RPi5 dla rzeczywistego sprzętu RPi3
   rpi:
     build: ./rpi-emulator
     container_name: c20-rpi
     privileged: true
     volumes:
       - ./shared:/shared
-      - i2c-bus:/dev/i2c
-      - gpio-pins:/sys/class/gpio
+      - /dev:/dev
     networks:
       - c20-network
     environment:
       - MQTT_BROKER=mosquitto
       - SYSTEM_MODE=C20
+      - HARDWARE_MODE=true
+    depends_on:
+      - mosquitto
+    profiles:
+      - hardware
+
+  # RPi5 emulator dla PC z emulowanymi portami
+  rpi3pc:
+    build: ./rpi-emulator
+    container_name: c20-rpi3pc
+    ports:
+      - "4000:4000"  # API port
+    volumes:
+      - ./shared:/shared
+      - i2c-bus:/dev/i2c
+    networks:
+      - c20-network
+    environment:
+      - MQTT_BROKER=mosquitto
+      - SYSTEM_MODE=C20
+      - GPIO_MOCK=true
+      - I2C_MOCK=true
+      - EMULATION_MODE=true
     depends_on:
       - mosquitto
 
@@ -23,27 +45,27 @@ services:
     build: ./lcd-display
     container_name: c20-lcd
     ports:
-      - "8081:80"
+      - "8089:80"
     networks:
       - c20-network
     environment:
-      - WS_URL=ws://rpi:9001
+      - WS_URL=ws://rpi3pc:9001
     depends_on:
-      - rpi
+      - rpi3pc
 
   # HUI Keyboard Panel
   hui-keyboard:
     build: ./hui-keyboard
     container_name: c20-keyboard
     ports:
-      - "8082:80"
+      - "8087:80"
     networks:
       - c20-network
     environment:
-      - RPI_HOST=rpi
+      - RPI_HOST=rpi3pc
       - I2C_ADDRESS=0x20
     depends_on:
-      - rpi
+      - rpi3pc
 
   # Symulacja czujników ciśnienia
   pressure-sensors:
@@ -83,18 +105,18 @@ services:
     networks:
       - c20-network
 
-  # WebGUI na porcie 8080
+  # WebGUI na porcie 8088
   webgui:
     build: ./frontend
     container_name: c20-webgui
     ports:
-      - "8080:80"
+      - "8088:80"
     networks:
       - c20-network
     environment:
-      - API_URL=http://rpi:4000
+      - API_URL=http://rpi3pc:4000
     depends_on:
-      - rpi
+      - rpi3pc
 
 
   # Symulator Modbus RTU IO 8CH
@@ -103,7 +125,7 @@ services:
     container_name: c20-modbus-io
     ports:
       - "5020:5020"  # TCP bridge dla Modbus RTU
-      - "8083:8083"  # Web API
+      - "8085:8085"  # Web API
     volumes:
       - modbus-rtu:/dev/modbus
     networks:
@@ -111,7 +133,7 @@ services:
     environment:
       - DEVICE_ADDRESS=1
       - BAUDRATE=9600
-      - WEB_PORT=8083
+      - WEB_PORT=8085
 
   # Wizualizacja Modbus
   modbus-visualizer:
@@ -122,7 +144,7 @@ services:
     networks:
       - c20-network
     environment:
-      - MODBUS_API=http://modbus-io-8ch:8083
+      - MODBUS_API=http://localhost:8085
     depends_on:
       - modbus-io-8ch
 
@@ -134,4 +156,3 @@ networks:
 volumes:
   modbus-rtu:
   i2c-bus:
-  gpio-pins:

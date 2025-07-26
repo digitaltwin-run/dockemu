@@ -5,7 +5,7 @@ RUN apt-get update && apt-get install -y \
     i2c-tools \
     python3-dev \
     python3-pip \
-    netcat \
+    netcat-openbsd \
     socat
 
 WORKDIR /app

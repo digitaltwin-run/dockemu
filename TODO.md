@@ -55,7 +55,7 @@ docker-compose up --build
 3. **Dostęp do interfejsów:**
 - LCD Display: http://localhost:8081
 - HUI Keyboard: http://localhost:8082
-- WebGUI: http://localhost:8080
+- WebGUI: http://localhost:8088
 - MQTT Broker: localhost:1883
 
 ### Przykłady użycia:
@@ -80,7 +80,7 @@ asyncio.run(test())
 #### Uruchomienie procedury testowej:
 ```bash
 # Przez API
-curl -X POST http://localhost:8080/api/procedures/start \
+curl -X POST http://localhost:8088/api/procedures/start \
   -H "Content-Type: application/json" \
   -d '{"procedure": "BLS_5000_TEST", "serial": "SN123456"}'
 ```

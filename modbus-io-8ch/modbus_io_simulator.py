@@ -1,12 +1,16 @@
 import asyncio
-import struct
 import json
+import socket
+import struct
+import threading
 from datetime import datetime
 from enum import Enum
-from flask import Flask, request, jsonify
+
+from flask import Flask, jsonify, request
 from flask_cors import CORS
-import threading
-import socket
+
+# Import web interface routes at module level to avoid circular imports
+from web_interface import web_app as web_blueprint
 
 class ControlMode(Enum):
     NORMAL = 0x0000      # Bezpośrednia kontrola
@@ -24,6 +28,8 @@ class ModbusRTUIO8CH:
         # Stan urządzenia
         self.digital_inputs = [False] * 8
         self.digital_outputs = [False] * 8
+        self.analog_inputs = [0.0] * 8
+        self.analog_outputs = [0.0] * 8
         self.control_modes = [ControlMode.NORMAL] * 8
         
         # Rejestry flash
@@ -309,8 +315,18 @@ class ModbusRTUIO8CH:
 app = Flask(__name__)
 CORS(app)
 
-# Globalna instancja symulatora
 simulator = ModbusRTUIO8CH()
+
+# Register the web interface blueprint
+app.register_blueprint(web_blueprint)
+
+# Add CORS headers to all responses
+@app.after_request
+def after_request(response):
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    return response
 
 @app.route('/api/status', methods=['GET'])
 def get_status():
