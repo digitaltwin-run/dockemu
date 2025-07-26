@@ -59,6 +59,38 @@
                             </div>
                         </div>
                     </div>
+                    
+                    <h3>HMI Hardware</h3>
+                    <div class="service-toggles">
+                        <div class="service-toggle" data-service="hmi-pad">
+                            <i class="fas fa-hand-pointer"></i>
+                            <span>Virtual Touchpad</span>
+                            <div class="toggle-switch active" id="toggle-hmi-pad">
+                                <div class="toggle-slider"></div>
+                            </div>
+                        </div>
+                        <div class="service-toggle" data-service="hmi-keyboard">
+                            <i class="fas fa-keyboard"></i>
+                            <span>Virtual Keyboard</span>
+                            <div class="toggle-switch active" id="toggle-hmi-keyboard">
+                                <div class="toggle-slider"></div>
+                            </div>
+                        </div>
+                        <div class="service-toggle" data-service="hmi-monitor">
+                            <i class="fas fa-desktop"></i>
+                            <span>Virtual Monitor</span>
+                            <div class="toggle-switch active" id="toggle-hmi-monitor">
+                                <div class="toggle-slider"></div>
+                            </div>
+                        </div>
+                        <div class="service-toggle" data-service="hmi-numpad">
+                            <i class="fas fa-calculator"></i>
+                            <span>Virtual Numpad</span>
+                            <div class="toggle-switch active" id="toggle-hmi-numpad">
+                                <div class="toggle-slider"></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="control-section">
@@ -122,6 +154,18 @@
                     </button>
                     <button class="tab-btn" data-target="modbus-frame">
                         <i class="fas fa-network-wired"></i> Modbus I/O
+                    </button>
+                    <button class="tab-btn" data-target="hmi-pad-frame">
+                        <i class="fas fa-hand-pointer"></i> HMI Touchpad
+                    </button>
+                    <button class="tab-btn" data-target="hmi-keyboard-frame">
+                        <i class="fas fa-keyboard"></i> HMI Keyboard
+                    </button>
+                    <button class="tab-btn" data-target="hmi-monitor-frame">
+                        <i class="fas fa-desktop"></i> HMI Monitor
+                    </button>
+                    <button class="tab-btn" data-target="hmi-numpad-frame">
+                        <i class="fas fa-calculator"></i> HMI Numpad
                     </button>
                 </div>
 
@@ -194,6 +238,105 @@
                             id="modbus-visualizer-frame" 
                             src="#modbus-visualizer-url" 
                             data-service="modbus_visualizer" 
+                            frameborder="0"
+                            loading="lazy">
+                        </iframe>
+                    </div>
+
+                    <!-- HMI Hardware Services -->
+                    
+                    <div class="simulator-frame" data-service="hmi-pad">
+                        <div class="frame-header">
+                            <h3><i class="fas fa-hand-pointer"></i> HMI Virtual Touchpad</h3>
+                            <div class="frame-controls">
+                                <button class="frame-btn" title="Refresh" onclick="refreshFrame('hmi-pad-frame')">
+                                    <i class="fas fa-sync-alt"></i>
+                                </button>
+                                <button class="frame-btn" title="Fullscreen" onclick="toggleFrameFullscreen('hmi-pad-frame')">
+                                    <i class="fas fa-expand"></i>
+                                </button>
+                                <button class="frame-btn" title="New Window" onclick="openInNewWindow('#hmi-pad-url')" data-service="hmi_pad">
+                                    <i class="fas fa-external-link-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <iframe 
+                            id="hmi-pad-frame" 
+                            src="#hmi-pad-url" 
+                            data-service="hmi_pad"
+                            frameborder="0"
+                            loading="lazy">
+                        </iframe>
+                    </div>
+
+                    <div class="simulator-frame" data-service="hmi-keyboard">
+                        <div class="frame-header">
+                            <h3><i class="fas fa-keyboard"></i> HMI Virtual Keyboard</h3>
+                            <div class="frame-controls">
+                                <button class="frame-btn" title="Refresh" onclick="refreshFrame('hmi-keyboard-frame')">
+                                    <i class="fas fa-sync-alt"></i>
+                                </button>
+                                <button class="frame-btn" title="Fullscreen" onclick="toggleFrameFullscreen('hmi-keyboard-frame')">
+                                    <i class="fas fa-expand"></i>
+                                </button>
+                                <button class="frame-btn" title="New Window" onclick="openInNewWindow('#hmi-keyboard-url')" data-service="hmi_keyboard">
+                                    <i class="fas fa-external-link-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <iframe 
+                            id="hmi-keyboard-frame" 
+                            src="#hmi-keyboard-url" 
+                            data-service="hmi_keyboard"
+                            frameborder="0"
+                            loading="lazy">
+                        </iframe>
+                    </div>
+
+                    <div class="simulator-frame" data-service="hmi-monitor">
+                        <div class="frame-header">
+                            <h3><i class="fas fa-desktop"></i> HMI Virtual Monitor (HDMI)</h3>
+                            <div class="frame-controls">
+                                <button class="frame-btn" title="Refresh" onclick="refreshFrame('hmi-monitor-frame')">
+                                    <i class="fas fa-sync-alt"></i>
+                                </button>
+                                <button class="frame-btn" title="Fullscreen" onclick="toggleFrameFullscreen('hmi-monitor-frame')">
+                                    <i class="fas fa-expand"></i>
+                                </button>
+                                <button class="frame-btn" title="New Window" onclick="openInNewWindow('#hmi-monitor-url')" data-service="hmi_monitor">
+                                    <i class="fas fa-external-link-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <iframe 
+                            id="hmi-monitor-frame" 
+                            src="#hmi-monitor-url" 
+                            data-service="hmi_monitor"
+                            frameborder="0"
+                            loading="lazy">
+                        </iframe>
+                    </div>
+
+                    <!-- HMI Virtual Numpad -->
+                    <div class="simulator-frame" data-service="hmi-numpad">
+                        <div class="frame-header">
+                            <h3><i class="fas fa-calculator"></i> HMI Virtual Numpad</h3>
+                            <div class="frame-controls">
+                                <button class="frame-btn" title="Refresh" onclick="refreshFrame('hmi-numpad-frame')">
+                                    <i class="fas fa-sync-alt"></i>
+                                </button>
+                                <button class="frame-btn" title="Fullscreen" onclick="toggleFrameFullscreen('hmi-numpad-frame')">
+                                    <i class="fas fa-expand"></i>
+                                </button>
+                                <button class="frame-btn" title="New Window" onclick="openInNewWindow('#hmi-numpad-url')" data-service="hmi_numpad">
+                                    <i class="fas fa-external-link-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <iframe 
+                            id="hmi-numpad-frame" 
+                            src="#hmi-numpad-url" 
+                            data-service="hmi_numpad"
                             frameborder="0"
                             loading="lazy">
                         </iframe>

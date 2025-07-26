@@ -11,7 +11,7 @@ RUN apk add --no-cache \
     ffmpeg
 
 # Install Python dependencies
-RUN pip3 install paho-mqtt websockets pillow opencv-python-headless
+RUN pip3 install --break-system-packages paho-mqtt websockets flask flask-cors
 
 # Create app directory
 WORKDIR /app

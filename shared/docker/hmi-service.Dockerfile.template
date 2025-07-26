@@ -1,0 +1,32 @@
+# Optimized HMI Service Dockerfile Template
+# Usage: Copy and customize for each HMI service
+# Services: hmi-monitor, hmi-numpad, hmi-keyboard, hmi-pad
+
+# Use shared base image
+FROM c20-nginx-python-base:latest
+
+# Service-specific metadata (customize per service)
+LABEL service.name="SERVICE_NAME"
+LABEL service.port="SERVICE_PORT"
+LABEL service.type="hmi"
+
+# Install service-specific Python packages (if needed)
+# RUN pip3 install --break-system-packages service-specific-package
+
+# Copy service files
+COPY . /app/
+COPY nginx.conf /etc/nginx/nginx.conf
+COPY start.sh /start.sh
+
+# Make start script executable
+RUN chmod +x /start.sh
+
+# Service-specific ports (customize per service)
+EXPOSE 80 SERVICE_WS_PORT
+
+# Service-specific health check (optional override)
+# HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+#     CMD curl -f http://localhost/SERVICE_HEALTH_ENDPOINT || exit 1
+
+# Start the service
+CMD ["/start.sh"]

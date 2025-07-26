@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HMI Virtual Numpad</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>HMI Virtual Numpad</h1>
+            <div class="status">
+                <span id="status">Disconnected</span>
+                <div class="led" id="status-led"></div>
+            </div>
+        </header>
+
+        <div class="numpad-container">
+            <div class="numpad-wrapper">
+                <div class="numpad-grid">
+                    <!-- Row 1: Function keys -->
+                    <button class="key function-key" data-key="NumLock">Num</button>
+                    <button class="key function-key" data-key="/" data-code="111">/</button>
+                    <button class="key function-key" data-key="*" data-code="106">*</button>
+                    <button class="key function-key backspace-key" data-key="Backspace" data-code="8">⌫</button>
+
+                    <!-- Row 2: Numbers -->
+                    <button class="key number-key" data-key="7" data-code="55">7</button>
+                    <button class="key number-key" data-key="8" data-code="56">8</button>
+                    <button class="key number-key" data-key="9" data-code="57">9</button>
+                    <button class="key function-key minus-key" data-key="-" data-code="109">-</button>
+
+                    <!-- Row 3: Numbers -->
+                    <button class="key number-key" data-key="4" data-code="52">4</button>
+                    <button class="key number-key" data-key="5" data-code="53">5</button>
+                    <button class="key number-key" data-key="6" data-code="54">6</button>
+                    <button class="key function-key plus-key" data-key="+" data-code="107" rowspan="2">+</button>
+
+                    <!-- Row 4: Numbers -->
+                    <button class="key number-key" data-key="1" data-code="49">1</button>
+                    <button class="key number-key" data-key="2" data-code="50">2</button>
+                    <button class="key number-key" data-key="3" data-code="51">3</button>
+
+                    <!-- Row 5: Zero and Enter -->
+                    <button class="key number-key zero-key" data-key="0" data-code="48" colspan="2">0</button>
+                    <button class="key function-key" data-key="." data-code="110">.</button>
+                    <button class="key function-key enter-key" data-key="Enter" data-code="13">↵</button>
+                </div>
+            </div>
+
+            <div class="numpad-controls">
+                <div class="control-section">
+                    <h3>Settings</h3>
+                    <div class="setting">
+                        <label for="click-sound">Click Sound:</label>
+                        <input type="checkbox" id="click-sound" checked>
+                    </div>
+                    <div class="setting">
+                        <label for="key-repeat">Key Repeat:</label>
+                        <input type="checkbox" id="key-repeat" checked>
+                    </div>
+                    <div class="setting">
+                        <label for="repeat-delay">Repeat Delay:</label>
+                        <input type="range" id="repeat-delay" min="100" max="1000" value="500" step="50">
+                        <span id="repeat-delay-value">500ms</span>
+                    </div>
+                </div>
+
+                <div class="control-section">
+                    <h3>Target Device</h3>
+                    <select id="target-device">
+                        <option value="rpi3pc">RPi Emulator (rpi3pc)</option>
+                        <option value="rpi-qemu">RPi QEMU (rpi-qemu)</option>
+                    </select>
+                </div>
+
+                <div class="control-section">
+                    <h3>Connection</h3>
+                    <div class="connection-status">
+                        <div class="status-item">
+                            <span class="label">Backend:</span>
+                            <span id="backend-status" class="status-value">Disconnected</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="label">MQTT:</span>
+                            <span id="mqtt-status" class="status-value">Disconnected</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="label">Target:</span>
+                            <span id="target-status" class="status-value">Unknown</span>
+                        </div>
+                    </div>
+                    <button id="reconnect-btn" class="control-btn">Reconnect</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="input-display">
+            <h3>Input Preview</h3>
+            <div class="display-area">
+                <input type="text" id="input-preview" readonly placeholder="Numpad input will appear here...">
+                <button id="clear-input" class="control-btn">Clear</button>
+                <button id="send-input" class="control-btn">Send to RPi</button>
+            </div>
+        </div>
+
+        <div class="event-log-section">
+            <h3>Event Log</h3>
+            <div class="log-controls">
+                <button id="toggle-log" class="control-btn">Toggle Log</button>
+                <button id="clear-log" class="control-btn">Clear Log</button>
+                <button id="export-log" class="control-btn">Export</button>
+            </div>
+            <div id="event-log" class="event-log"></div>
+        </div>
+
+        <div class="statistics">
+            <h3>Statistics</h3>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <span class="stat-label">Keys Pressed:</span>
+                    <span id="keys-pressed" class="stat-value">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Commands Sent:</span>
+                    <span id="commands-sent" class="stat-value">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Uptime:</span>
+                    <span id="uptime" class="stat-value">00:00:00</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Last Activity:</span>
+                    <span id="last-activity" class="stat-value">Never</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="hmi-numpad.js"></script>
+</body>
+</html>

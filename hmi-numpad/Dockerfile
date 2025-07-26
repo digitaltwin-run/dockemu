@@ -1,6 +1,6 @@
 FROM nginx:alpine
 
-# Install basic tools for virtual keyboard
+# Install tools for numpad backend
 RUN apk add --no-cache \
     python3 \
     py3-pip \
@@ -24,6 +24,6 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY start.sh /start.sh
 RUN chmod +x /start.sh
 
-EXPOSE 80 5556
+EXPOSE 80 5560
 
 CMD ["/start.sh"]

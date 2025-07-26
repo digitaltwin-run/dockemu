@@ -23,13 +23,11 @@ WORKDIR /rpi
 RUN mkdir -p /rpi/images /rpi/scripts /rpi/shared
 
 # Copy emulator scripts and configurations
-COPY qemu-scripts/ /rpi/scripts/
-COPY shared/ /rpi/shared/
 COPY boot-qemu.sh /rpi/
 COPY rpi-api-bridge.py /rpi/
 
 # Make scripts executable
-RUN chmod +x /rpi/boot-qemu.sh /rpi/scripts/*.sh
+RUN chmod +x /rpi/boot-qemu.sh
 
 # Expose ports
 # 2222 - SSH to RPi

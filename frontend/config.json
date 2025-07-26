@@ -34,6 +34,30 @@
       "url": "http://${HOST_DOMAIN}:${RPI_API_PORT}",
       "icon": "fas fa-microchip",
       "description": "Raspberry Pi Hardware Emulator"
+    },
+    "hmi_pad": {
+      "name": "HMI Virtual Touchpad",
+      "url": "http://${HOST_DOMAIN}:${HMI_PAD_PORT}",
+      "icon": "fas fa-hand-pointer",
+      "description": "Virtual Touchpad Interface for RPi Control"
+    },
+    "hmi_keyboard": {
+      "name": "HMI Virtual Keyboard",
+      "url": "http://${HOST_DOMAIN}:${HMI_KEYBOARD_PORT}",
+      "icon": "fas fa-keyboard",
+      "description": "Virtual Keyboard Interface for RPi Input"
+    },
+    "hmi_monitor": {
+      "name": "HMI Virtual Monitor",
+      "url": "http://${HOST_DOMAIN}:${HMI_MONITOR_PORT}",
+      "icon": "fas fa-desktop",
+      "description": "Virtual HDMI Monitor for RPi Display Output"
+    },
+    "hmi_numpad": {
+      "name": "HMI Virtual Numpad",
+      "url": "http://${HOST_DOMAIN}:${HMI_NUMPAD_PORT}",
+      "icon": "fas fa-calculator",
+      "description": "Virtual Numpad Interface for RPi Numeric Input"
     }
   },
   "mqtt": {
