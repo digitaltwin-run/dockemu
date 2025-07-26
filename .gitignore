@@ -4,6 +4,10 @@ venv
 .xz
 .img
 .iso
+*.img
+*.iso
+*.img.xz
+*.iso.xz
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
