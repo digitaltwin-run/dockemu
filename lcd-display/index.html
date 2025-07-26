@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>C20 LCD Display - 7.9"</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="lcd-frame">
+        <div class="lcd-screen" id="lcdScreen">
+            <div class="boot-screen" id="bootScreen">
+                <h1>CONNECT C20</h1>
+                <p>System Diagnostyczny v2.1.0</p>
+                <div class="boot-progress">
+                    <div class="progress-bar" id="bootProgress"></div>
+                </div>
+                <p class="boot-status" id="bootStatus">Inicjalizacja systemu...</p>
+            </div>
+
+            <div class="main-menu" id="mainMenu" style="display: none;">
+                <div class="menu-header">
+                    <h2>MENU GŁÓWNE</h2>
+                    <div class="status-bar">
+                        <span id="pressureHP">HP: 0.0 bar</span>
+                        <span id="pressureMP">MP: 0.0 bar</span>
+                        <span id="pressureLP">LP: 0.0 mbar</span>
+                    </div>
+                </div>
+
+                <div class="menu-items">
+                    <div class="menu-item active" data-action="start">
+                        <span class="icon">▶</span>
+                        <span>Start systemu</span>
+                    </div>
+                    <div class="menu-item" data-action="autodiag">
+                        <span class="icon">🔍</span>
+                        <span>Autodiagnostyka</span>
+                    </div>
+                    <div class="menu-item" data-action="test">
+                        <span class="icon">🧪</span>
+                        <span>Procedury testowe</span>
+                    </div>
+                    <div class="menu-item" data-action="settings">
+                        <span class="icon">⚙</span>
+                        <span>Ustawienia</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="test-screen" id="testScreen" style="display: none;">
+                <h2>Test w toku</h2>
+                <canvas id="pressureChart" width="600" height="300"></canvas>
+                <div class="test-info">
+                    <p>Czas: <span id="testTime">00:00</span></p>
+                    <p>Status: <span id="testStatus">Inicjalizacja</span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

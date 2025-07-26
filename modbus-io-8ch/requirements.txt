@@ -1,0 +1,4 @@
+flask==2.3.2
+flask-cors==4.0.0
+pyserial==3.5
+asyncio==3.4.3

@@ -1,72 +1,137 @@
 version: '3.8'
 
 services:
-  rpi-emulator:
+  # Główny emulator RPi5
+  rpi:
     build: ./rpi-emulator
-    container_name: rpi-emulator
-    restart: unless-stopped
+    container_name: c20-rpi
+    privileged: true
     volumes:
-      - ./shared:/app/shared
-    environment:
-      - PYTHONUNBUFFERED=1
+      - ./shared:/shared
+      - i2c-bus:/dev/i2c
+      - gpio-pins:/sys/class/gpio
     networks:
-      - iot-network
+      - c20-network
+    environment:
+      - MQTT_BROKER=mosquitto
+      - SYSTEM_MODE=C20
+    depends_on:
+      - mosquitto
 
+  # LCD Display (7.9" HDMI)
   lcd-display:
     build: ./lcd-display
-    container_name: lcd-display
-    restart: unless-stopped
+    container_name: c20-lcd
+    ports:
+      - "8081:80"
+    networks:
+      - c20-network
+    environment:
+      - WS_URL=ws://rpi:9001
+    depends_on:
+      - rpi
+
+  # HUI Keyboard Panel
+  hui-keyboard:
+    build: ./hui-keyboard
+    container_name: c20-keyboard
+    ports:
+      - "8082:80"
+    networks:
+      - c20-network
+    environment:
+      - RPI_HOST=rpi
+      - I2C_ADDRESS=0x20
+    depends_on:
+      - rpi
+
+  # Symulacja czujników ciśnienia
+  pressure-sensors:
+    build: ./pressure-sensors
+    container_name: c20-sensors
+    volumes:
+      - i2c-bus:/dev/i2c
+    networks:
+      - c20-network
+    environment:
+      - I2C_BUS=1
+      - SENSOR_LP_ADDR=0x48
+      - SENSOR_MP_ADDR=0x49
+      - SENSOR_HP_ADDR=0x4A
+
+  # PCB OUT 12 - Sterownik zaworów
+  valve-controller:
+    build: ./valve-controller
+    container_name: c20-valves
+    volumes:
+      - i2c-bus:/dev/i2c
+    networks:
+      - c20-network
+    environment:
+      - I2C_ADDRESS=0x21
+      - NUM_OUTPUTS=12
+
+  # MQTT Broker
+  mosquitto:
+    image: eclipse-mosquitto:2.0
+    container_name: c20-mqtt
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ./mosquitto/config:/mosquitto/config
+    networks:
+      - c20-network
+
+  # WebGUI na porcie 8080
+  webgui:
+    build: ./frontend
+    container_name: c20-webgui
     ports:
       - "8080:80"
     networks:
-      - iot-network
+      - c20-network
+    environment:
+      - API_URL=http://rpi:4000
     depends_on:
-      - rpi-emulator
+      - rpi
 
-  hui-keyboard:
-    build: ./hui-keyboard
-    container_name: hui-keyboard
-    restart: unless-stopped
+
+  # Symulator Modbus RTU IO 8CH
+  modbus-io-8ch:
+    build: ./modbus-io-8ch
+    container_name: c20-modbus-io
     ports:
-      - "8081:8081"
-    networks:
-      - iot-network
-    depends_on:
-      - rpi-emulator
-
-  pressure-sensors:
-    build: ./pressure-sensors
-    container_name: pressure-sensors
-    restart: unless-stopped
+      - "5020:5020"  # TCP bridge dla Modbus RTU
+      - "8083:8083"  # Web API
     volumes:
-      - ./shared:/app/shared
+      - modbus-rtu:/dev/modbus
     networks:
-      - iot-network
-    depends_on:
-      - rpi-emulator
+      - c20-network
+    environment:
+      - DEVICE_ADDRESS=1
+      - BAUDRATE=9600
+      - WEB_PORT=8083
 
-  valve-controller:
-    build: ./valve-controller
-    container_name: valve-controller
-    restart: unless-stopped
-    volumes:
-      - ./shared:/app/shared
+  # Wizualizacja Modbus
+  modbus-visualizer:
+    build: ./modbus-visualizer
+    container_name: c20-modbus-viz
+    ports:
+      - "8084:80"
     networks:
-      - iot-network
+      - c20-network
+    environment:
+      - MODBUS_API=http://modbus-io-8ch:8083
     depends_on:
-      - rpi-emulator
+      - modbus-io-8ch
 
-  test-procedures:
-    build: ./test-procedures
-    container_name: test-procedures
-    restart: unless-stopped
-    volumes:
-      - ./shared:/app/shared
-    networks:
-      - iot-network
-    depends_on:
-      - rpi-emulator
 
 networks:
-  iot-network:
+  c20-network:
     driver: bridge
+
+volumes:
+  modbus-rtu:
+  i2c-bus:
+  gpio-pins:

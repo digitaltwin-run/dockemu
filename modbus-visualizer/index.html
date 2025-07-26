@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modbus RTU IO 8CH - Wizualizacja</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .status-panel {
+            background: #16213e;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .io-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .io-section {
+            background: #0f3460;
+            border-radius: 10px;
+            padding: 20px;
+        }
+        
+        .io-channels {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .channel {
+            background: #1a1a2e;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+        
+        .channel:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        
+        .channel.active {
+            background: #2ecc71;
+            color: #000;
+        }
+        
+        .channel-number {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .channel-mode {
+            font-size: 11px;
+            margin-top: 5px;
+            opacity: 0.8;
+        }
+        
+        .controls {
+            background: #16213e;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .control-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .control-row label {
+            width: 150px;
+        }
+        
+        .control-row input, .control-row select {
+            flex: 1;
+            padding: 8px;
+            background: #0f3460;
+            color: #eee;
+            border: 1px solid #4a7c7e;
+            border-radius: 5px;
+        }
+        
+        .button {
+            background: #4a7c7e;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .button:hover {
+            background: #5a8c8e;
+        }
+        
+        .button.danger {
+            background: #e74c3c;
+        }
+        
+        .button.danger:hover {
+            background: #c0392b;
+        }
+        
+        .modbus-console {
+            background: #000;
+            color: #0f0;
+            font-family: monospace;
+            padding: 15px;
+            border-radius: 5px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+        
+        .log-entry {
+            margin-bottom: 5px;
+        }
+        
+        .log-time {
+            color: #888;
+        }
+        
+        .log-tx {
+            color: #ff0;
+        }
+        
+        .log-rx {
+            color: #0ff;
+        }
+        
+        .flash-indicator {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            width: 10px;
+            height: 10px;
+            background: #f39c12;
+            border-radius: 50%;
+            opacity: 0;
+            animation: flash 1s infinite;
+        }
+        
+        @keyframes flash {
+            0%, 100% { opacity: 0; }
+            50% { opacity: 1; }
+        }
+        
+        .mode-badge {
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            background: #3498db;
+            color: white;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+        
+        .mode-badge.linkage {
+            background: #9b59b6;
+        }
+        
+        .mode-badge.toggle {
+            background: #e67e22;
+        }
+        
+        .mode-badge.edge {
+            background: #e74c3c;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Modbus RTU IO 8CH - Symulator</h1>
+            <p>Wizualizacja i kontrola modułu I/O</p>
+        </div>
+        
+        <div class="status-panel">
+            <h3>Status Urządzenia</h3>
+            <div class="control-row">
+                <span>Adres: <strong id="deviceAddress">0x01</strong></span>
+                <span>Baudrate: <strong id="baudrate">9600</strong></span>
+                <span>Status: <strong id="connectionStatus">Połączony</strong></span>
+            </div>
+        </div>
+        
+        <div class="io-grid">
+            <div class="io-section">
+                <h3>Wejścia Cyfrowe (DI)</h3>
+                <div class="io-channels" id="digitalInputs"></div>
+            </div>
+            
+            <div class="io-section">
+                <h3>Wyjścia Cyfrowe (DO)</h3>
+                <div class="io-channels" id="digitalOutputs"></div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <h3>Sterowanie</h3>
+            
+            <div class="control-row">
+                <label>Komenda Modbus (HEX):</label>
+                <input type="text" id="modbusCommand" placeholder="np. 01 05 00 00 FF 00">
+                <button class="button" onclick="sendModbusCommand()">Wyślij</button>
+            </div>
+            
+            <div class="control-row">
+                <label>Tryb kanału:</label>
+                <select id="channelSelect">
+                    <option value="0">Kanał 1</option>
+                    <option value="1">Kanał 2</option>
+                    <option value="2">Kanał 3</option>
+                    <option value="3">Kanał 4</option>
+                    <option value="4">Kanał 5</option>
+                    <option value="5">Kanał 6</option>
+                    <option value="6">Kanał 7</option>
+                    <option value="7">Kanał 8</option>
+                </select>
+                <select id="modeSelect">
+                    <option value="0">Normal</option>
+                    <option value="1">Linkage (DI→DO)</option>
+                    <option value="2">Toggle</option>
+                    <option value="3">Edge Trigger</option>
+                </select>
+                <button class="button" onclick="setChannelMode()">Ustaw</button>
+            </div>
+            
+            <div class="control-row">
+                <button class="button" onclick="allOutputsOn()">Wszystkie ON</button>
+                <button class="button" onclick="allOutputsOff()">Wszystkie OFF</button>
+                <button class="button" onclick="toggleAllOutputs()">Przełącz wszystkie</button>
+                <button class="button danger" onclick="resetDevice()">Reset</button>
+            </div>
+        </div>
+        
+        <div class="modbus-console" id="modbusConsole">
+            <div>Modbus RTU Console - Ready</div>
+        </div>
+    </div>
+    
+    <script>
+        const API_URL = 'http://localhost:8083/api';
+        let currentStatus = null;
+        
+        // Inicjalizacja
+        function init() {
+            createChannels();
+            setInterval(updateStatus, 100);
+            setInterval(updateHistory, 1000);
+        }
+        
+        function createChannels() {
+            const inputsContainer = document.getElementById('digitalInputs');
+            const outputsContainer = document.getElementById('digitalOutputs');
+            
+            for (let i = 0; i < 8; i++) {
+                // Wejścia
+                const inputDiv = document.createElement('div');
+                inputDiv.className = 'channel';
+                inputDiv.id = `di-${i}`;
+                inputDiv.innerHTML = `
+                    <div class="channel-number">DI${i+1}</div>
+                    <div class="channel-mode">OFF</div>
+                `;
+                inputDiv.onclick = () => toggleInput(i);
+                inputsContainer.appendChild(inputDiv);
+                
+                // Wyjścia
+                const outputDiv = document.createElement('div');
+                outputDiv.className = 'channel';
+                outputDiv.id = `do-${i}`;
+                outputDiv.innerHTML = `
+                    <div class="channel-number">DO${i+1}</div>
+                    <div class="channel-mode">OFF</div>
+                    <div class="flash-indicator" id="flash-${i}"></div>
+                    <div class="mode-badge" id="mode-${i}">NORMAL</div>
+                `;
+                outputDiv.onclick = () => toggleOutput(i);
+                outputsContainer.appendChild(outputDiv);
+            }
+        }
+        
+        async function updateStatus() {
+            try {
+                const response = await fetch(`${API_URL}/status`);
+                const status = await response.json();
+                currentStatus = status;
+                
+                // Aktualizuj UI
+                document.getElementById('deviceAddress').textContent = `0x${status.device_address.toString(16).padStart(2, '0').toUpperCase()}`;
+                document.getElementById('baudrate').textContent = status.baudrate;
+                
+                // Aktualizuj kanały
+                for (let i = 0; i < 8; i++) {
+                    // Wejścia
+                    const inputEl = document.getElementById(`di-${i}`);
+                    if (status.digital_inputs[i]) {
+                        inputEl.classList.add('active');
+                        inputEl.querySelector('.channel-mode').textContent = 'ON';
+                    } else {
+                        inputEl.classList.remove('active');
+                        inputEl.querySelector('.channel-mode').textContent = 'OFF';
+                    }
+                    
+                    // Wyjścia
+                    const outputEl = document.getElementById(`do-${i}`);
+                    if (status.digital_outputs[i]) {
+                        outputEl.classList.add('active');
+                        outputEl.querySelector('.channel-mode').textContent = 'ON';
+                    } else {
+                        outputEl.classList.remove('active');
+                        outputEl.querySelector('.channel-mode').textContent = 'OFF';
+                    }
+                    
+                    // Tryb
+                    const modeBadge = document.getElementById(`mode-${i}`);
+                    const mode = status.control_modes[i];
+                    modeBadge.textContent = mode;
+                    modeBadge.className = 'mode-badge';
+                    if (mode === 'LINKAGE') modeBadge.classList.add('linkage');
+                    else if (mode === 'TOGGLE') modeBadge.classList.add('toggle');
+                    else if (mode === 'EDGE_TRIGGER') modeBadge.classList.add('edge');
+                    
+                    // Flash
+                    const flashEl = document.getElementById(`flash-${i}`);
+                    if (status.flash_intervals.on[i] > 0) {
+                        flashEl.style.display = 'block';
+                    } else {
+                        flashEl.style.display = 'none';
+                    }
+                }
+            } catch (error) {
+                document.getElementById('connectionStatus').textContent = 'Rozłączony';
+            }
+        }
+        
+        async function updateHistory() {
+            try {
+                const response = await fetch(`${API_URL}/history?limit=10`);
+                const history = await response.json();
+                
+                const console = document.getElementById('modbusConsole');
+                console.innerHTML = '';
+                
+                history.reverse().forEach(event => {
+                    const entry = document.createElement('div');
+                    entry.className = 'log-entry';
+                    const time = new Date(event.timestamp).toLocaleTimeString();
+                    entry.innerHTML = `<span class="log-time">[${time}]</span> ${event.type}: ${JSON.stringify(event.data)}`;
+                    console.appendChild(entry);
+                });
+            } catch (error) {
+                // Ignoruj błędy
+            }
+        }
+        
+        async function toggleInput(channel) {
+            if (!currentStatus) return;
+            
+            const newStates = [...currentStatus.digital_inputs];
+            newStates[channel] = !newStates[channel];
+            
+            await fetch(`${API_URL}/inputs`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ states: newStates })
+            });
+        }
+        
+        async function toggleOutput(channel) {
+            // Wyślij komendę Modbus toggle
+            const addr = channel.toString(16).padStart(4, '0');
+            const command = `01 05 ${addr.substring(0,2)} ${addr.substring(2,4)} 55 00`;
+            await sendModbusHex(command);
+        }
+        
+        async function sendModbusCommand() {
+            const command = document.getElementById('modbusCommand').value;
+            await sendModbusHex(command);
+        }
+        
+        async function sendModbusHex(hexString) {
+            const cleanHex = hexString.replace(/\s/g, '');
+            
+            // Oblicz CRC jeśli nie ma
+            if (cleanHex.length % 2 === 0 && cleanHex.length >= 8) {
+                const frameWithoutCRC = cleanHex.substring(0, cleanHex.length - 4);
+                
+                const response = await fetch(`${API_URL}/modbus`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ frame: cleanHex })
+                });
+                
+                const result = await response.json();
+                if (result.response) {
+                    logModbus('TX', cleanHex);
+                    logModbus('RX', result.response);
+                }
+            }
+        }
+        
+        function logModbus(direction, hex) {
+            const console = document.getElementById('modbusConsole');
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            const time = new Date().toLocaleTimeString();
+            const formatted = hex.match(/.{2}/g).join(' ').toUpperCase();
+            entry.innerHTML = `<span class="log-time">[${time}]</span> <span class="log-${direction.toLowerCase()}">${direction}:</span> ${formatted}`;
+            console.insertBefore(entry, console.firstChild);
+            
+            // Ogranicz liczbę wpisów
+            while (console.children.length > 50) {
+                console.removeChild(console.lastChild);
+            }
+        }
+        
+        async function allOutputsOn() {
+            await sendModbusHex('01 05 00 FF FF 00 BC 0A');
+        }
+        
+        async function allOutputsOff() {
+            await sendModbusHex('01 05 00 FF 00 00 FD FA');
+        }
+        
+        async function toggleAllOutputs() {
+            await sendModbusHex('01 05 00 FF 55 00 C2 AA');
+        }
+        
+        async function setChannelMode() {
+            const channel = parseInt(document.getElementById('channelSelect').value);
+            const mode = parseInt(document.getElementById('modeSelect').value);
+            
+            const addr = (0x1000 + channel).toString(16).padStart(4, '0');
+            const modeHex = mode.toString(16).padStart(4, '0');
+            const command = `01 06 ${addr.substring(0,2)} ${addr.substring(2,4)} ${modeHex.substring(0,2)} ${modeHex.substring(2,4)}`;
+            
+            await sendModbusHex(command);
+        }
+        
+        function resetDevice() {
+            if (confirm('Czy na pewno chcesz zresetować urządzenie?')) {
+                // Reset wszystkich wyjść
+                allOutputsOff();
+            }
+        }
+        
+        // Start
+        init();
+    </script>
+</body>
+</html>
+
