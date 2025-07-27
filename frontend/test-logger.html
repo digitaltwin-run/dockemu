@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logger Test</title>
+</head>
+<body>
+    <h1>Logger Test Page</h1>
+    <div id="status">Loading logger...</div>
+    
+    <script src="js/logger.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const statusDiv = document.getElementById('status');
+            
+            try {
+                if (window.Logger) {
+                    statusDiv.innerHTML = '✅ Logger loaded successfully!';
+                    statusDiv.innerHTML += '<br>Logger name: ' + window.Logger.name;
+                    statusDiv.innerHTML += '<br>Session ID: ' + window.Logger.sessionId;
+                    
+                    // Test basic logging
+                    window.Logger.info('Test log message', { test: true });
+                    statusDiv.innerHTML += '<br>✅ Basic logging test passed';
+                    
+                    // Test if logger blocks execution
+                    setTimeout(() => {
+                        statusDiv.innerHTML += '<br>✅ Async execution not blocked';
+                    }, 100);
+                    
+                } else {
+                    statusDiv.innerHTML = '❌ Logger failed to load';
+                }
+            } catch (error) {
+                statusDiv.innerHTML = '❌ Logger error: ' + error.message;
+                console.error('Logger initialization error:', error);
+            }
+        });
+    </script>
+</body>
+</html>

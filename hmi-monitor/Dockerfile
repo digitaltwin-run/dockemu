@@ -1,14 +1,16 @@
-FROM nginx:alpine
+FROM php:8.2-fpm-alpine
 
-# Install tools for virtual monitor/display
+# Install Caddy and tools for virtual monitor/display
 RUN apk add --no-cache \
+    caddy \
     python3 \
     py3-pip \
     py3-flask \
     py3-flask-cors \
     py3-websockets \
     py3-pillow \
-    ffmpeg
+    ffmpeg \
+    supervisor
 
 # Install Python dependencies
 RUN pip3 install --break-system-packages paho-mqtt websockets flask flask-cors
@@ -19,8 +21,8 @@ WORKDIR /app
 # Copy application files
 COPY . /app/
 
-# Copy nginx configuration
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Copy Caddy configuration
+COPY Caddyfile /etc/caddy/Caddyfile
 
 # Create startup script
 COPY start.sh /start.sh

@@ -1,12 +1,13 @@
 FROM nginx:alpine
 
-# Install basic tools for virtual keyboard
+# Install Python and required packages
 RUN apk add --no-cache \
     python3 \
     py3-pip \
     py3-flask \
     py3-flask-cors \
-    py3-websockets
+    py3-websockets \
+    supervisor
 
 # Install Python dependencies
 RUN pip3 install --break-system-packages paho-mqtt websockets
@@ -20,10 +21,27 @@ COPY . /app/
 # Copy nginx configuration
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Create startup script
-COPY start.sh /start.sh
-RUN chmod +x /start.sh
+# Create supervisor directory and configuration for managing multiple processes
+RUN mkdir -p /etc/supervisor/conf.d && \
+    echo '[supervisord]' > /etc/supervisor/conf.d/supervisord.conf && \
+    echo 'nodaemon=true' >> /etc/supervisor/conf.d/supervisord.conf && \
+    echo 'user=root' >> /etc/supervisor/conf.d/supervisord.conf && \
+    echo '' >> /etc/supervisor/conf.d/supervisord.conf && \
+    echo '[program:nginx]' >> /etc/supervisor/conf.d/supervisord.conf && \
+    echo 'command=nginx -g "daemon off;"' >> /etc/supervisor/conf.d/supervisord.conf && \
+    echo 'autostart=true' >> /etc/supervisor/conf.d/supervisord.conf && \
+    echo 'autorestart=true' >> /etc/supervisor/conf.d/supervisord.conf && \
+    echo 'priority=10' >> /etc/supervisor/conf.d/supervisord.conf && \
+    echo '' >> /etc/supervisor/conf.d/supervisord.conf && \
+    echo '[program:backend]' >> /etc/supervisor/conf.d/supervisord.conf && \
+    echo 'command=python3 /app/keyboard-backend.py' >> /etc/supervisor/conf.d/supervisord.conf && \
+    echo 'directory=/app' >> /etc/supervisor/conf.d/supervisord.conf && \
+    echo 'autostart=true' >> /etc/supervisor/conf.d/supervisord.conf && \
+    echo 'autorestart=true' >> /etc/supervisor/conf.d/supervisord.conf && \
+    echo 'priority=20' >> /etc/supervisor/conf.d/supervisord.conf
 
-EXPOSE 80 5556
+# Expose ports
+EXPOSE 80 5561
 
-CMD ["/start.sh"]
+# Use supervisor to manage both nginx and Python backend
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

@@ -15,8 +15,8 @@ import threading
 from datetime import datetime
 import paho.mqtt.client as mqtt
 from PIL import Image, ImageDraw
-import cv2
-import numpy as np
+# import cv2  # Removed - not used in code
+# import numpy as np  # Removed - not used in code
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -418,23 +418,18 @@ def main():
     async def websocket_handler(websocket, path):
         await backend.handle_websocket_client(websocket, path)
     
-    # Start servers
-    start_server = websockets.serve(websocket_handler, "0.0.0.0", 5558)
-    vnc_server = websockets.serve(websocket_handler, "0.0.0.0", 5559)
-    
     logger.info("WebSocket servers starting on ports 5558 (control) and 5559 (VNC)")
     
-    # Run event loop
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(start_server)
-    loop.run_until_complete(vnc_server)
+    # Run event loop with proper async setup
+    async def start_servers():
+        start_server = await websockets.serve(websocket_handler, "0.0.0.0", 5558)
+        vnc_server = await websockets.serve(websocket_handler, "0.0.0.0", 5559)
+        return start_server, vnc_server
     
     try:
-        loop.run_forever()
+        asyncio.run(start_servers())
     except KeyboardInterrupt:
         logger.info("Shutting down...")
-    finally:
-        loop.close()
 
 if __name__ == "__main__":
     main()

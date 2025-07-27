@@ -111,6 +111,9 @@ def create_web_app():
     
     return app
 
+# Create module-level web_app for import compatibility
+web_app = create_web_blueprint()
+
 def run_web_interface(host: str = '0.0.0.0', port: int = 8020) -> None:
     """Run the Flask web interface.
     

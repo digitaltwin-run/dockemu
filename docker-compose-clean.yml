@@ -1,0 +1,183 @@
+version: '3.8'
+
+# ===============================================
+# C20 SIMPLIFIED SYSTEM - CLEAN DOCKER COMPOSE
+# ===============================================
+# 4 Core Services: Dashboard + HMI Monitor + RPI3 + MQTT
+# No external config dependencies, works out-of-the-box
+
+services:
+  # ===== MAIN DASHBOARD (Port 8060) =====
+  dashboard:
+    build: 
+      context: ./dashboard
+      dockerfile: Dockerfile
+    container_name: c20-dashboard-clean
+    restart: unless-stopped
+    ports:
+      - "${DASHBOARD_PORT:-8060}:80"
+    volumes:
+      - ./.env:/var/www/html/.env:ro
+    networks:
+      - c20-clean-network
+    environment:
+      - DASHBOARD_PORT=${DASHBOARD_PORT:-8060}
+      - HMI_MONITOR_PORT=${HMI_MONITOR_PORT:-8072}
+      - QEMU_API_PORT=${QEMU_API_PORT:-4001}
+      - QEMU_VNC_PORT=${QEMU_VNC_PORT:-5901}
+      - QEMU_SSH_PORT=${QEMU_SSH_PORT:-2222}
+      - MQTT_PORT=${MQTT_PORT:-1883}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"] 
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ===== HMI MONITOR with RPI3 Integration (Port 8072) =====
+  hmi-monitor:
+    build: 
+      context: ./hmi-monitor
+      dockerfile: Dockerfile
+    container_name: c20-hmi-monitor-clean
+    restart: unless-stopped
+    ports:
+      - "${HMI_MONITOR_PORT:-8072}:80"
+      - "${HMI_MONITOR_WS_PORT:-5570}:5558"   # WebSocket control
+      - "${HMI_MONITOR_VNC_PORT:-5571}:5559"  # WebSocket VNC
+    volumes:
+      - ./.env:/app/.env:ro
+      - ./shared:/app/shared:rw
+    networks:
+      - c20-clean-network
+    environment:
+      - QEMU_VNC_PORT=${QEMU_VNC_PORT:-5901}
+      - QEMU_SSH_PORT=${QEMU_SSH_PORT:-2222}
+      - QEMU_API_PORT=${QEMU_API_PORT:-4001}
+      - MQTT_BROKER=mqtt-clean
+    depends_on:
+      - mqtt-clean
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ===== RPI3 QEMU VIRTUALIZATION =====
+  rpi-qemu:
+    build:
+      context: ./rpi-emulator
+      dockerfile: Dockerfile.qemu
+    container_name: c20-rpi-qemu-clean
+    restart: unless-stopped
+    privileged: true
+    ports:
+      - "${QEMU_SSH_PORT:-2222}:2222"     # SSH to RPi OS
+      - "${QEMU_VNC_PORT:-5901}:5901"     # VNC display
+      - "${QEMU_API_PORT:-4001}:4000"     # API bridge
+      - "${QEMU_WEB_PORT:-8091}:8080"     # Management interface
+    volumes:
+      - ./rpi3iso:/rpi/images:rw
+      - ./shared:/rpi/shared:rw
+      - qemu-clean-data:/rpi/data:rw
+    networks:
+      - c20-clean-network
+    environment:
+      - QEMU_CPU=cortex-a72
+      - QEMU_MACHINE=raspi3b
+      - QEMU_MEMORY=1G
+      - MQTT_BROKER=mqtt-clean
+      - SYSTEM_MODE=C20
+    depends_on:
+      - mqtt-clean
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "4000"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # ===== MQTT BROKER (Simplified Config) =====
+  mqtt-clean:
+    image: eclipse-mosquitto:2.0-openssl
+    container_name: c20-mqtt-clean
+    restart: unless-stopped
+    ports:
+      - "${MQTT_PORT:-1883}:1883"         # MQTT
+      - "${MQTT_WEBSOCKET_PORT:-9001}:9001"  # WebSocket
+    volumes:
+      - mqtt-clean-data:/mosquitto/data:rw
+      - mqtt-clean-logs:/mosquitto/log:rw
+    networks:
+      - c20-clean-network
+    # Use default mosquitto config - no external config needed
+    command: |
+      sh -c 'echo "listener 1883
+      listener 9001
+      protocol websockets
+      allow_anonymous true
+      persistence true
+      persistence_location /mosquitto/data/
+      log_dest file /mosquitto/log/mosquitto.log
+      log_dest stdout" > /mosquitto/config/mosquitto.conf && mosquitto -c /mosquitto/config/mosquitto.conf'
+    healthcheck:
+      test: ["CMD", "mosquitto_pub", "-h", "localhost", "-t", "test", "-m", "test"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+# ===== NETWORK CONFIGURATION =====
+networks:
+  c20-clean-network:
+    name: c20-clean-network
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.101.0/24
+          gateway: 192.168.101.1
+
+# ===== PERSISTENT VOLUMES =====
+volumes:
+  qemu-clean-data:
+    name: c20-clean-qemu-data
+  mqtt-clean-data:
+    name: c20-clean-mqtt-data
+  mqtt-clean-logs:
+    name: c20-clean-mqtt-logs
+
+# ===============================================
+# USAGE INSTRUCTIONS
+# ===============================================
+#
+# 1. Quick Start:
+#    docker-compose -f docker-compose-clean.yml up -d
+#
+# 2. View Status:
+#    docker-compose -f docker-compose-clean.yml ps
+#
+# 3. View Logs:
+#    docker-compose -f docker-compose-clean.yml logs -f
+#
+# 4. Access Points:
+#    Dashboard:    http://localhost:8060
+#    HMI Monitor:  http://localhost:8072  
+#    RPI3 VNC:     localhost:5901
+#    RPI3 SSH:     ssh pi@localhost -p 2222
+#    MQTT:         localhost:1883
+#
+# 5. Stop System:
+#    docker-compose -f docker-compose-clean.yml down
+#
+# 6. Complete Reset:
+#    docker-compose -f docker-compose-clean.yml down -v
+#
+# ===============================================
+# ARCHITECTURE BENEFITS
+# ===============================================
+#
+# ✅ NO external config dependencies
+# ✅ NO network conflicts (unique subnet)
+# ✅ NO container name conflicts (unique names)
+# ✅ Built-in MQTT configuration
+# ✅ Health checks for all services
+# ✅ Volume persistence
+# ✅ Clean shutdown/startup
+# ✅ Easy to debug and maintain

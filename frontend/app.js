@@ -1,10 +1,65 @@
 // C20 Hardware Simulator Dashboard JavaScript
 class DashboardController {
     constructor() {
+        // Initialize component logging
+        this.logger = window.Logger;
+        this.logger.componentStart('DashboardController', {
+            timestamp: new Date().toISOString()
+        });
+        
+        // Wait for configuration to load
+        if (typeof window.SERVICES_CONFIG === 'undefined') {
+            this.logger.error('Configuration not loaded! Make sure config.js is included before app.js', {
+                availableGlobals: Object.keys(window).filter(key => key.includes('CONFIG')),
+                scripts: Array.from(document.scripts).map(s => s.src)
+            });
+            return;
+        }
+        
+        // Build services from generated configuration
         this.services = {
-            lcd: { url: 'http://localhost:8091', active: true, name: 'LCD Display' },
-            keyboard: { url: 'http://localhost:8092', active: true, name: 'HUI Keyboard' },
-            modbus: { url: 'http://localhost:8084', active: true, name: 'Modbus I/O' }
+            lcd: { 
+                url: window.SERVICES_CONFIG.lcd_display.url, 
+                active: true, 
+                name: window.SERVICES_CONFIG.lcd_display.name,
+                icon: window.SERVICES_CONFIG.lcd_display.icon,
+                description: window.SERVICES_CONFIG.lcd_display.description
+            },
+            keyboard: { 
+                url: window.SERVICES_CONFIG.hui_keyboard.url, 
+                active: true, 
+                name: window.SERVICES_CONFIG.hui_keyboard.name,
+                icon: window.SERVICES_CONFIG.hui_keyboard.icon,
+                description: window.SERVICES_CONFIG.hui_keyboard.description
+            },
+            modbus: { 
+                url: window.SERVICES_CONFIG.modbus_visualizer.url, 
+                active: true, 
+                name: window.SERVICES_CONFIG.modbus_visualizer.name,
+                icon: window.SERVICES_CONFIG.modbus_visualizer.icon,
+                description: window.SERVICES_CONFIG.modbus_visualizer.description
+            },
+            'hmi-pad': {
+                url: window.SERVICES_CONFIG.hmi_pad.url,
+                active: true,
+                name: window.SERVICES_CONFIG.hmi_pad.name,
+                icon: window.SERVICES_CONFIG.hmi_pad.icon,
+                description: window.SERVICES_CONFIG.hmi_pad.description
+            },
+            'hmi-keyboard': {
+                url: window.SERVICES_CONFIG.hmi_keyboard.url,
+                active: true,
+                name: window.SERVICES_CONFIG.hmi_keyboard.name,
+                icon: window.SERVICES_CONFIG.hmi_keyboard.icon,
+                description: window.SERVICES_CONFIG.hmi_keyboard.description
+            },
+            'hmi-numpad': {
+                url: window.SERVICES_CONFIG.hmi_numpad.url,
+                active: true,
+                name: window.SERVICES_CONFIG.hmi_numpad.name,
+                icon: window.SERVICES_CONFIG.hmi_numpad.icon,
+                description: window.SERVICES_CONFIG.hmi_numpad.description
+            }
         };
         this.currentLayout = 'grid';
         this.focusedService = null;
@@ -12,16 +67,49 @@ class DashboardController {
     }
 
     init() {
-        this.setupEventListeners();
-        this.updateTime();
-        this.checkServiceStatus();
-        this.hideLoadingOverlay();
-        this.updateSystemInfo();
+        this.logger.info('Initializing Dashboard Controller', {
+            services: Object.keys(this.services),
+            currentLayout: this.currentLayout
+        });
         
-        // Auto-refresh intervals
-        setInterval(() => this.updateTime(), 1000);
-        setInterval(() => this.checkServiceStatus(), 30000);
-        setInterval(() => this.updateSystemInfo(), 10000);
+        this.logger.time('dashboard_initialization');
+        
+        try {
+            this.logger.debug('Setting up event listeners');
+            this.setupEventListeners();
+            
+            this.logger.debug('Updating initial time display');
+            this.updateTime();
+            
+            this.logger.debug('Checking initial service status');
+            this.checkServiceStatus();
+            
+            this.logger.debug('Hiding loading overlay');
+            this.hideLoadingOverlay();
+            
+            this.logger.debug('Updating system information');
+            this.updateSystemInfo();
+            
+            // Auto-refresh intervals
+            this.logger.debug('Setting up auto-refresh intervals');
+            this.timeUpdateInterval = setInterval(() => this.updateTime(), 1000);
+            this.statusCheckInterval = setInterval(() => this.checkServiceStatus(), 30000);
+            this.systemInfoInterval = setInterval(() => this.updateSystemInfo(), 10000);
+            
+            this.logger.componentEnd('DashboardController');
+            this.logger.timeEnd('dashboard_initialization');
+            
+            this.logger.info('Dashboard Controller initialized successfully', {
+                totalServices: Object.keys(this.services).length,
+                activeServices: Object.values(this.services).filter(s => s.active).length
+            });
+        } catch (error) {
+            this.logger.error('Failed to initialize Dashboard Controller', {
+                error: error.message,
+                stack: error.stack
+            });
+            throw error;
+        }
     }
 
     setupEventListeners() {
@@ -289,7 +377,11 @@ class DashboardController {
                 const isHealthy = Math.random() > 0.1; // 90% success rate
                 
                 if (!isHealthy) {
-                    console.warn(`Service ${service} appears to be unhealthy`);
+                    this.logger.warn(`Service ${service} appears to be unhealthy`, {
+                        url: serviceConfig.url,
+                        name: serviceConfig.name,
+                        error: 'Simulated error'
+                    });
                 }
             }
         });
@@ -394,10 +486,62 @@ function closeModal() {
     dashboard.closeModal();
 }
 
+// Utility function to hide loading overlay
+function hideLoadingOverlay() {
+    const overlay = document.getElementById('loading-overlay');
+    if (overlay) {
+        overlay.classList.add('hidden');
+        if (window.Logger) {
+            window.Logger.debug('Loading overlay hidden manually', {
+                overlayElement: overlay.id,
+                timestamp: new Date().toISOString()
+            });
+        }
+    }
+}
+
 // Initialize dashboard when DOM is loaded
 let dashboard;
 document.addEventListener('DOMContentLoaded', () => {
-    dashboard = new DashboardController();
+    // Initialize global logging for page initialization
+    if (window.Logger) {
+        window.Logger.pageStart({
+            url: window.location.href,
+            userAgent: navigator.userAgent,
+            timestamp: new Date().toISOString()
+        });
+        window.Logger.info('DOM loaded, initializing dashboard', {
+            readyState: document.readyState,
+            timestamp: new Date().toISOString()
+        });
+    }
+    
+    // Always hide loading overlay first
+    hideLoadingOverlay();
+    
+    // Wait for configuration to be available
+    const initDashboard = () => {
+        if (typeof window.SERVICES_CONFIG !== 'undefined') {
+            if (window.Logger) {
+                window.Logger.info('Configuration available, creating DashboardController', {
+                    configKeys: Object.keys(window.SERVICES_CONFIG || {}),
+                    totalServices: Object.keys(window.SERVICES_CONFIG || {}).length
+                });
+            }
+            dashboard = new DashboardController();
+        } else {
+            if (window.Logger) {
+                window.Logger.debug('Configuration not yet available, retrying in 100ms', {
+                    attempt: Date.now(),
+                    availableGlobals: Object.keys(window).filter(key => key.includes('CONFIG'))
+                });
+            }
+            setTimeout(initDashboard, 100);
+        }
+    };
+    
+    // Start initialization
+    initDashboard();
     
     // Add some initial loading delay for dramatic effect
     setTimeout(() => {

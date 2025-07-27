@@ -21,9 +21,8 @@ COPY . /app/
 # Copy nginx configuration
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Create supervisor directory and configuration for managing multiple processes
-RUN mkdir -p /etc/supervisor/conf.d && \
-    echo '[supervisord]' > /etc/supervisor/conf.d/supervisord.conf && \
+# Create supervisor configuration for managing multiple processes
+RUN echo '[supervisord]' > /etc/supervisor/conf.d/supervisord.conf && \
     echo 'nodaemon=true' >> /etc/supervisor/conf.d/supervisord.conf && \
     echo 'user=root' >> /etc/supervisor/conf.d/supervisord.conf && \
     echo '' >> /etc/supervisor/conf.d/supervisord.conf && \
@@ -34,14 +33,14 @@ RUN mkdir -p /etc/supervisor/conf.d && \
     echo 'priority=10' >> /etc/supervisor/conf.d/supervisord.conf && \
     echo '' >> /etc/supervisor/conf.d/supervisord.conf && \
     echo '[program:backend]' >> /etc/supervisor/conf.d/supervisord.conf && \
-    echo 'command=python3 /app/numpad-backend.py' >> /etc/supervisor/conf.d/supervisord.conf && \
+    echo 'command=python3 /app/%(ENV_BACKEND_SCRIPT)s' >> /etc/supervisor/conf.d/supervisord.conf && \
     echo 'directory=/app' >> /etc/supervisor/conf.d/supervisord.conf && \
     echo 'autostart=true' >> /etc/supervisor/conf.d/supervisord.conf && \
     echo 'autorestart=true' >> /etc/supervisor/conf.d/supervisord.conf && \
     echo 'priority=20' >> /etc/supervisor/conf.d/supervisord.conf
 
-# Expose ports
-EXPOSE 80 5560
+# Expose ports  
+EXPOSE 80
 
 # Use supervisor to manage both nginx and Python backend
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

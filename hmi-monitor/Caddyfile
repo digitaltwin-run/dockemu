@@ -1,0 +1,45 @@
+:80 {
+    # Serve static files from /app
+    root * /app
+    
+    # Enable file server for static content
+    file_server
+    
+    # PHP-FPM processing for .php files
+    php_fastcgi 127.0.0.1:9000
+    
+    # WebSocket proxy for monitor backend
+    @websocket {
+        header Connection *Upgrade*
+        header Upgrade websocket
+    }
+    handle @websocket {
+        reverse_proxy 127.0.0.1:5558 127.0.0.1:5559
+    }
+    
+    # API endpoint proxy
+    handle /api/* {
+        reverse_proxy 127.0.0.1:5000
+    }
+    
+    # VNC proxy
+    handle /vnc/* {
+        reverse_proxy 127.0.0.1:5559
+    }
+    
+    # Default try files behavior
+    try_files {path} {path}/ /index.php?{query}
+    
+    # Security headers
+    header {
+        X-Content-Type-Options nosniff
+        X-Frame-Options DENY
+        X-XSS-Protection "1; mode=block"
+    }
+    
+    # Logging
+    log {
+        output stdout
+        level INFO
+    }
+}

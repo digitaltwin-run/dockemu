@@ -1,0 +1,207 @@
+version: '3.8'
+
+# ===============================================
+# C20 SIMPLIFIED ARCHITECTURE - 4 Core Services
+# ===============================================
+# Reduced from 25+ services to 4 essential ones
+# Dashboard (8060) + HMI Monitor (8072) + RPI3 QEMU + MQTT
+
+services:
+  # ===== MAIN DASHBOARD (Port 8060) =====
+  dashboard:
+    build: 
+      context: ./dashboard
+      dockerfile: Dockerfile
+    container_name: c20-dashboard
+    restart: unless-stopped
+    ports:
+      - "${DASHBOARD_PORT:-8060}:80"
+    volumes:
+      - ./.env:/var/www/html/.env:ro
+    networks:
+      - c20-network
+    environment:
+      - DASHBOARD_PORT=${DASHBOARD_PORT:-8060}
+      - HMI_MONITOR_PORT=${HMI_MONITOR_PORT:-8072}
+      - QEMU_API_PORT=${QEMU_API_PORT:-4001}
+      - QEMU_VNC_PORT=${QEMU_VNC_PORT:-5901}
+      - QEMU_SSH_PORT=${QEMU_SSH_PORT:-2222}
+      - MQTT_PORT=${MQTT_PORT:-1883}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.dashboard.rule=Host(`dashboard.c20.local`)"
+      - "traefik.http.services.dashboard.loadbalancer.server.port=80"
+
+  # ===== HMI MONITOR with RPI3 Integration (Port 8072) =====
+  hmi-monitor:
+    build: 
+      context: ./hmi-monitor
+      dockerfile: Dockerfile
+    container_name: c20-hmi-monitor
+    restart: unless-stopped
+    ports:
+      - "${HMI_MONITOR_PORT:-8072}:80"
+      - "${HMI_MONITOR_WS_PORT:-5570}:5558"   # WebSocket control
+      - "${HMI_MONITOR_VNC_PORT:-5571}:5559"  # WebSocket VNC
+    volumes:
+      - ./.env:/app/.env:ro
+      - ./shared:/app/shared
+    networks:
+      - c20-network
+    environment:
+      - QEMU_VNC_PORT=${QEMU_VNC_PORT:-5901}
+      - QEMU_SSH_PORT=${QEMU_SSH_PORT:-2222}
+      - QEMU_API_PORT=${QEMU_API_PORT:-4001}
+      - MQTT_BROKER=mqtt
+    depends_on:
+      - mqtt
+      - rpi-qemu
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.hmi-monitor.rule=Host(`hmi.c20.local`)"
+      - "traefik.http.services.hmi-monitor.loadbalancer.server.port=80"
+
+  # ===== RPI3 QEMU VIRTUALIZATION =====
+  rpi-qemu:
+    build:
+      context: ./rpi-emulator
+      dockerfile: Dockerfile.qemu
+    container_name: c20-rpi-qemu
+    restart: unless-stopped
+    privileged: true
+    ports:
+      - "${QEMU_SSH_PORT:-2222}:2222"     # SSH to RPi OS
+      - "${QEMU_VNC_PORT:-5901}:5901"     # VNC display
+      - "${QEMU_API_PORT:-4001}:4000"     # API bridge
+      - "${QEMU_WEB_PORT:-8091}:8080"     # Management interface
+    volumes:
+      - ./rpi3iso:/rpi/images
+      - ./shared:/rpi/shared
+      - qemu-data:/rpi/data
+    networks:
+      - c20-network
+    environment:
+      - QEMU_CPU=cortex-a72
+      - QEMU_MACHINE=raspi3b
+      - QEMU_MEMORY=1G
+      - MQTT_BROKER=mqtt
+      - SYSTEM_MODE=C20
+    depends_on:
+      - mqtt
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "4000"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.rpi-qemu.rule=Host(`rpi.c20.local`)"
+      - "traefik.http.services.rpi-qemu.loadbalancer.server.port=8080"
+
+  # ===== MQTT BROKER =====
+  mqtt:
+    image: eclipse-mosquitto:2.0-openssl
+    container_name: c20-mqtt
+    restart: unless-stopped
+    ports:
+      - "${MQTT_PORT:-1883}:1883"         # MQTT
+      - "${MQTT_WEBSOCKET_PORT:-9001}:9001"  # WebSocket
+    volumes:
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - mqtt-data:/mosquitto/data
+      - mqtt-logs:/mosquitto/log
+    networks:
+      - c20-network
+    healthcheck:
+      test: ["CMD", "mosquitto_pub", "-h", "localhost", "-t", "test", "-m", "test"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.mqtt.rule=Host(`mqtt.c20.local`)"
+      - "traefik.http.services.mqtt.loadbalancer.server.port=9001"
+
+# ===== NETWORK CONFIGURATION =====
+networks:
+  c20-network:
+    name: ${COMPOSE_PROJECT_NAME:-c20-simplified}-network
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.100.0/24
+
+# ===== PERSISTENT VOLUMES =====
+volumes:
+  qemu-data:
+    name: ${COMPOSE_PROJECT_NAME:-c20-simulator}-qemu-data
+  mqtt-data:
+    name: ${COMPOSE_PROJECT_NAME:-c20-simulator}-mqtt-data
+  mqtt-logs:
+    name: ${COMPOSE_PROJECT_NAME:-c20-simulator}-mqtt-logs
+
+# ===== PROFILES FOR DIFFERENT DEPLOYMENT MODES =====
+# Usage Examples:
+# docker-compose -f docker-compose-simplified.yml up                    # Start all services
+# docker-compose -f docker-compose-simplified.yml --profile dev up      # Development mode
+# docker-compose -f docker-compose-simplified.yml --profile prod up     # Production mode
+# docker-compose -f docker-compose-simplified.yml up dashboard          # Start only dashboard
+
+x-dev-services: &dev-services
+  # Development extensions can be added here
+  profiles:
+    - dev
+    - all
+
+x-prod-services: &prod-services
+  # Production extensions can be added here
+  profiles:
+    - prod
+    - all
+
+# ===== USAGE INSTRUCTIONS =====
+# 
+# 1. Quick Start:
+#    docker-compose -f docker-compose-simplified.yml up -d
+#
+# 2. Access Points:
+#    Dashboard:    http://localhost:8060
+#    HMI Monitor:  http://localhost:8072  
+#    RPI3 VNC:     localhost:5901
+#    RPI3 SSH:     ssh pi@localhost -p 2222
+#    MQTT:         localhost:1883
+#
+# 3. Scaling Individual Services:
+#    docker-compose -f docker-compose-simplified.yml up -d --scale mqtt=2
+#
+# 4. View Logs:
+#    docker-compose -f docker-compose-simplified.yml logs -f
+#
+# 5. Stop All:
+#    docker-compose -f docker-compose-simplified.yml down
+#
+# 6. Complete Reset:
+#    docker-compose -f docker-compose-simplified.yml down -v --rmi all
+#
+# ===== ARCHITECTURE BENEFITS =====
+# 
+# ✅ Reduced from 25+ services to 4 core services
+# ✅ Simplified port management with clear .env mapping
+# ✅ Unified dashboard for all system monitoring
+# ✅ RPI3 loading process visible in HMI Monitor
+# ✅ PHP + .env integration throughout
+# ✅ Easy diagnostics and troubleshooting
+# ✅ Health checks for all services
+# ✅ Traefik labels for advanced routing
+# ✅ Volume persistence for important data
+# ✅ Network isolation and security

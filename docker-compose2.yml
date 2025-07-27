@@ -154,7 +154,7 @@ services:
     container_name: c20-modbus-io
     ports:
       - "${MODBUS_IO_TCP_PORT}:5020"  # TCP bridge dla Modbus RTU
-      - "${MODBUS_IO_API_PORT}:8083"  # Web API (external:internal)
+      - "${MODBUS_IO_API_PORT}:8020"  # Web API (external:internal)
     volumes:
       - modbus-rtu:/dev/modbus
     networks:

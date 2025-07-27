@@ -110,7 +110,7 @@ start_qemu() {
         -smp 4 \
         -drive "file=$image_file,format=raw,if=sd" \
         -netdev user,id=net0,hostfwd=tcp::${SSH_PORT}-:22 \
-        -device rtl8139,netdev=net0 \
+        -device usb-net,netdev=net0 \
         -vnc ":1" \
         -serial stdio \
         -no-reboot \
